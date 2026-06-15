@@ -32,6 +32,23 @@ Implement `localStorage` persistence in `app/page.tsx` — wire up a `useEffect`
 ## 2. The Search → Paste → Cite Pattern
 *One prompt where this pattern changed the outcome: what did you search for, what did you paste, and what would the agent have done without it?*
 
+### The prompt
+Implement home page routing, a `/docs` workspace, and direct navigation to `/docs/[id]` — and refer to `@docs/nextjs-link-component.md` for the Link component.
+
+### What was searched and pasted
+The reference file `docs/nextjs-link-component.md` was pasted into the conversation. It showed the exact import path (`next/link`) and the basic `<Link href="…">` usage. Alongside it, the agent read the official Next.js docs bundled in `node_modules/next/dist/docs/` — specifically `03-layouts-and-pages.md` and `04-linking-and-navigating.md` — which revealed two breaking-change details not in the short reference:
+
+1. **`params` is now a Promise.** In this version of Next.js, dynamic route parameters arrive as `Promise<{ id: string }>` and must be `await`-ed inside an `async` Server Component. Without reading the docs, the agent would have written `params.id` directly, which would have produced a TypeScript error and a runtime failure.
+
+2. **`useRouter` comes from `next/navigation`, not `next/router`.** The pasted reference only covered `<Link>`. For the "New document" button — which must navigate imperatively after writing to `localStorage` — the agent needed `useRouter`. Reading the navigation doc confirmed the correct import is `from 'next/navigation'`. Using the Pages Router import (`next/router`) would have thrown at runtime in the App Router.
+
+### How the agent would have operated without citation
+Without the pasted reference and the node_modules docs read, the agent would have relied on training-data knowledge of Next.js — which reflects versions before these breaking changes. It would likely have:
+- Written `params.id` instead of `await params.id`, silently producing `undefined` when navigating directly to `/docs/abc123`
+- Imported `useRouter` from `next/router`, causing a runtime error in every client component that tries to navigate imperatively
+
+Both bugs would have been invisible until the feature was tested in the browser. The citation forced the agent to read the version-specific docs first, and the AGENTS.md instruction ("Read the relevant guide in `node_modules/next/dist/docs/` before writing any code") enforced it.
+
 ---
 
 ## 3. CLAUDE.md Catching Drift

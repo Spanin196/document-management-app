@@ -1,125 +1,23 @@
-"use client";
-
-import { useState, useRef, useEffect } from "react";
-
-type Doc = {
-  id: string;
-  title: string;
-  body: string;
-};
-
-function uid() {
-  return Math.random().toString(36).slice(2);
-}
+import Link from "next/link";
 
 export default function Home() {
-  const [docs, setDocs] = useState<Doc[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("docs");
-      if (stored) setDocs(JSON.parse(stored) as Doc[]);
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("docs", JSON.stringify(docs));
-  }, [docs]);
-
-  const titleRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
-
-  const activeDoc = docs.find((d) => d.id === activeId) ?? null;
-  const filtered = docs.filter((d) =>
-    d.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  function newDocument() {
-    const doc: Doc = { id: uid(), title: "", body: "" };
-    setDocs((prev) => [doc, ...prev]);
-    setActiveId(doc.id);
-  }
-
-  function update(field: "title" | "body", value: string) {
-    setDocs((prev) =>
-      prev.map((d) => (d.id === activeId ? { ...d, [field]: value } : d))
-    );
-  }
-
-  // Focus title whenever a new doc becomes active
-  useEffect(() => {
-    if (activeId) titleRef.current?.focus();
-  }, [activeId]);
-
-  function onTitleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      bodyRef.current?.focus();
-    }
-  }
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-60 flex flex-col gap-2 border-r border-gray-200 p-3 shrink-0">
-        <input
-          type="text"
-          placeholder="Search…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded border border-gray-200 px-3 py-2 text-sm outline-none"
-        />
-        <button
-          onClick={newDocument}
-          className="w-full rounded border border-gray-200 px-3 py-2 text-sm text-left hover:bg-gray-50"
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-10">
+      <div className="max-w-md text-center">
+        <h1 className="text-3xl font-semibold text-gray-900">
+          Document Manager
+        </h1>
+        <p className="mt-3 text-base leading-relaxed text-gray-500">
+          A simple workspace to write, search, and organise your documents.
+          Everything is saved locally in your browser — no account required.
+        </p>
+        <Link
+          href="/docs"
+          className="mt-8 inline-block rounded border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
-          + New document
-        </button>
-        <ul className="flex flex-col gap-0.5 overflow-y-auto">
-          {filtered.map((doc) => (
-            <li key={doc.id}>
-              <button
-                onClick={() => setActiveId(doc.id)}
-                className={`w-full truncate rounded px-3 py-2 text-left text-sm ${
-                  doc.id === activeId ? "bg-gray-100" : "hover:bg-gray-50"
-                }`}
-              >
-                {doc.title || "Untitled"}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      {/* Editor */}
-      <main className="flex flex-1 flex-col overflow-hidden p-10">
-        {activeDoc ? (
-          <>
-            <input
-              ref={titleRef}
-              type="text"
-              placeholder="Title"
-              value={activeDoc.title}
-              onChange={(e) => update("title", e.target.value)}
-              onKeyDown={onTitleKeyDown}
-              className="border-b border-gray-200 pb-3 text-2xl font-semibold outline-none"
-            />
-            <textarea
-              ref={bodyRef}
-              placeholder="Start typing…"
-              value={activeDoc.body}
-              onChange={(e) => update("body", e.target.value)}
-              className="mt-4 flex-1 resize-none text-base leading-relaxed outline-none"
-            />
-          </>
-        ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
-            Click &quot;+ New document&quot; to get started.
-          </div>
-        )}
-      </main>
-    </div>
+          Go to workspace
+        </Link>
+      </div>
+    </main>
   );
 }
