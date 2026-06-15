@@ -24,7 +24,10 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("docs");
-      if (stored) setDocs(JSON.parse(stored) as Doc[]);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) setDocs(parsed as Doc[]);
+      }
     } catch {}
     setLoaded(true);
   }, []);
@@ -43,6 +46,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   );
 
   function newDocument() {
+    if (!loaded) return;
     const doc: Doc = { id: uid(), title: "", body: "" };
     const next = [doc, ...docs];
     // Write synchronously so the new page finds the doc in localStorage
@@ -132,11 +136,11 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
               Back to workspace
             </Link>
           </div>
-        ) : (
+        ) : loaded ? (
           <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
             Click &quot;+ New document&quot; to get started.
           </div>
-        )}
+        ) : null}
       </main>
     </div>
   );
