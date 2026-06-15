@@ -85,3 +85,32 @@ The app runs at http://localhost:3000.
 4. **Access control is non-negotiable.** Every API route must verify the caller's session and permissions before returning data or mutating state. There are no public data endpoints.
 
 5. **Preserve the audit trail.** Documents and versions are never hard-deleted by default — use soft deletes with a `deletedAt` timestamp. Audit log rows are append-only.
+
+## Context — Feature Backlog
+
+Tasks ranked easiest → hardest. Status noted where work is complete or partial.
+
+| # | Feature | Status |
+|---|---|---|
+| 1 | **Empty states** — readable messages when no documents exist and when search returns no results (Task 9) | Not started |
+| 2 | **Home page at `/`** — short description and a link to the workspace (Task 1) | Not started |
+| 3 | **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) | Not started |
+| 4 | **Workspace at `/docs`** — move the two-pane layout to `/docs`; current `app/page.tsx` becomes the home page (Task 2) | Not started |
+| 5 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Not started |
+| 6 | **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave (Tasks 5, 6-partial) | Not started |
+| 7 | **Direct navigation to `/docs/[id]`** — loading the URL directly opens the correct document from localStorage; depends on Task 6 above (Task 6-partial) | Not started |
+| 8 | **Document not found page** — navigating to a non-existent document ID shows a clear message and a link back to `/docs` (Task 7) | Not started |
+| 9 | **Responsive layout** — side-by-side at desktop width; stacked or collapsible sidebar at phone width (Task 12) | Not started |
+| 10 | **Markdown support** — body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10) | Not started |
+
+Already implemented (not listed above):
+- **New document button** — creates a blank doc and opens it immediately (Task 4) ✓
+- **Persistence across reload** — documents survive a full page reload via localStorage (Task 6-partial) ✓
+- **Enter key jumps to body** — pressing Enter in the title field moves the cursor to the body; no mouse needed (Task 11) ✓
+- **Title search** — sidebar filters documents by title as the user types (Task 3-partial) ✓
+
+## Next To Do
+
+**Home page + workspace routing (Backlog items 2 & 4)**
+
+Create `app/docs/page.tsx` and move the two-pane layout there. Convert `app/page.tsx` into a simple home page with a short description and a "Go to workspace" link pointing to `/docs`. This sets up the routing skeleton that all subsequent per-document routes (`/docs/[id]`) depend on, and it is a prerequisite for direct navigation, the not-found page, and the per-document editor.
