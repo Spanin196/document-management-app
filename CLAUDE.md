@@ -94,7 +94,7 @@ Tasks ranked easiest → hardest. Status noted where work is complete or partial
 |---|---|---|
 | 1 | **Empty states** — readable messages when no documents exist and when search returns no results (Task 9) | Not started |
 | 2 | **Home page at `/`** — short description and a link to the workspace (Task 1) | ✓ Done |
-| 3 | **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) | Not started |
+| 3 | **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) | ✓ Done |
 | 4 | **Workspace at `/docs`** — move the two-pane layout to `/docs`; current `app/page.tsx` becomes the home page (Task 2) | ✓ Done |
 | 5 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Not started |
 | 6 | **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave (Tasks 5, 6-partial) | ✓ Done |
@@ -111,8 +111,11 @@ Already implemented (not listed above):
 
 ## Next To Do
 
-**Delete control (Backlog item 3)**
+**Empty states (Backlog item 1)**
 
-Add a delete button to each document row in the sidebar in `app/docs/WorkspaceClient.tsx`. Clicking it should ask for confirmation (a simple `window.confirm` is sufficient) before removing the document from the `docs` array. If the deleted document is currently open, clear `activeId` and navigate back to `/docs` so the editor doesn't show a ghost document.
+Add readable empty-state messages in `app/docs/WorkspaceClient.tsx`:
 
-This is the next most impactful core feature: users can create documents but currently have no way to remove them. It is self-contained in `WorkspaceClient.tsx` and requires no routing changes or new dependencies.
+1. **No documents yet** — when `docs` is empty, replace the blank sidebar list with a short message like "No documents yet. Click + New document to get started."
+2. **No search results** — when `docs` is non-empty but `filtered` is empty (search term matches nothing), show "No documents match your search." in the sidebar list area.
+
+Both conditions are already computable from existing state (`docs.length` and `filtered.length`). No new dependencies or routing changes needed — purely additive UI inside the `<ul>` block in the sidebar.
