@@ -17,6 +17,17 @@ export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("docs");
+      if (stored) setDocs(JSON.parse(stored) as Doc[]);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("docs", JSON.stringify(docs));
+  }, [docs]);
+
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
