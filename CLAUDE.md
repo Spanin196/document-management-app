@@ -93,13 +93,13 @@ Tasks ranked easiest → hardest. Status noted where work is complete or partial
 | # | Feature | Status |
 |---|---|---|
 | 1 | **Empty states** — readable messages when no documents exist and when search returns no results (Task 9) | Not started |
-| 2 | **Home page at `/`** — short description and a link to the workspace (Task 1) | Not started |
+| 2 | **Home page at `/`** — short description and a link to the workspace (Task 1) | ✓ Done |
 | 3 | **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) | Not started |
-| 4 | **Workspace at `/docs`** — move the two-pane layout to `/docs`; current `app/page.tsx` becomes the home page (Task 2) | Not started |
+| 4 | **Workspace at `/docs`** — move the two-pane layout to `/docs`; current `app/page.tsx` becomes the home page (Task 2) | ✓ Done |
 | 5 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Not started |
-| 6 | **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave (Tasks 5, 6-partial) | Not started |
-| 7 | **Direct navigation to `/docs/[id]`** — loading the URL directly opens the correct document from localStorage; depends on Task 6 above (Task 6-partial) | Not started |
-| 8 | **Document not found page** — navigating to a non-existent document ID shows a clear message and a link back to `/docs` (Task 7) | Not started |
+| 6 | **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave (Tasks 5, 6-partial) | ✓ Done |
+| 7 | **Direct navigation to `/docs/[id]`** — loading the URL directly opens the correct document from localStorage; depends on Task 6 above (Task 6-partial) | ✓ Done |
+| 8 | **Document not found page** — navigating to a non-existent document ID shows a clear message and a link back to `/docs` (Task 7) | ✓ Done |
 | 9 | **Responsive layout** — side-by-side at desktop width; stacked or collapsible sidebar at phone width (Task 12) | Not started |
 | 10 | **Markdown support** — body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10) | Not started |
 
@@ -111,6 +111,8 @@ Already implemented (not listed above):
 
 ## Next To Do
 
-**Home page + workspace routing (Backlog items 2 & 4)**
+**Delete control (Backlog item 3)**
 
-Create `app/docs/page.tsx` and move the two-pane layout there. Convert `app/page.tsx` into a simple home page with a short description and a "Go to workspace" link pointing to `/docs`. This sets up the routing skeleton that all subsequent per-document routes (`/docs/[id]`) depend on, and it is a prerequisite for direct navigation, the not-found page, and the per-document editor.
+Add a delete button to each document row in the sidebar in `app/docs/WorkspaceClient.tsx`. Clicking it should ask for confirmation (a simple `window.confirm` is sufficient) before removing the document from the `docs` array. If the deleted document is currently open, clear `activeId` and navigate back to `/docs` so the editor doesn't show a ghost document.
+
+This is the next most impactful core feature: users can create documents but currently have no way to remove them. It is self-contained in `WorkspaceClient.tsx` and requires no routing changes or new dependencies.
