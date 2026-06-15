@@ -13,17 +13,16 @@ function uid() {
 }
 
 export default function Home() {
-  const [docs, setDocs] = useState<Doc[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("docs");
-      return stored ? (JSON.parse(stored) as Doc[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [docs, setDocs] = useState<Doc[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("docs");
+      if (stored) setDocs(JSON.parse(stored) as Doc[]);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("docs", JSON.stringify(docs));
