@@ -21,6 +21,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const [activeId, setActiveId] = useState<string | null>(initialId ?? null);
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -85,9 +86,41 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-60 flex flex-col gap-2 border-r border-gray-200 p-3 shrink-0">
+    <div className="flex h-screen flex-col overflow-hidden md:flex-row">
+      {/* Mobile header bar */}
+      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 px-3 md:hidden">
+        <button
+          onClick={() => setSidebarOpen((o) => !o)}
+          aria-label="Toggle sidebar"
+          className="rounded p-1.5 hover:bg-gray-100"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor" />
+            <rect y="8.25" width="18" height="1.5" rx="0.75" fill="currentColor" />
+            <rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor" />
+          </svg>
+        </button>
+        <span className="truncate text-sm font-medium text-gray-700">
+          {activeDoc?.title || "Documents"}
+        </span>
+      </div>
+
+      {/* Backdrop — mobile only, closes sidebar on tap */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar
+          Mobile: fixed overlay from below the header, slides in from left.
+          Desktop: static in the flex row, always visible. */}
+      <aside
+        className={`fixed top-12 bottom-0 left-0 z-30 flex w-60 shrink-0 flex-col gap-2 border-r border-gray-200 bg-white p-3 transition-transform duration-200 md:static md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <input
           type="text"
           placeholder="Search…"
@@ -139,6 +172,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 >
                   <Link
                     href={`/docs/${doc.id}`}
+                    onClick={() => setSidebarOpen(false)}
                     className="min-w-0 flex-1 truncate px-3 py-2 text-sm"
                   >
                     {doc.title || "Untitled"}
@@ -158,7 +192,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
       </aside>
 
       {/* Editor */}
-      <main className="flex flex-1 flex-col overflow-hidden p-10">
+      <main className="flex flex-1 flex-col overflow-hidden p-6 md:p-10">
         {activeDoc ? (
           <>
             <input
