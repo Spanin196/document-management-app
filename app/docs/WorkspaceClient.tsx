@@ -8,6 +8,7 @@ type Doc = {
   id: string;
   title: string;
   body: string;
+  updatedAt: number;
 };
 
 function uid() {
@@ -41,13 +42,14 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   const activeDoc = docs.find((d) => d.id === activeId) ?? null;
-  const filtered = docs.filter((d) =>
+  const sorted = [...docs].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  const filtered = sorted.filter((d) =>
     d.title.toLowerCase().includes(search.toLowerCase())
   );
 
   function newDocument() {
     if (!loaded) return;
-    const doc: Doc = { id: uid(), title: "", body: "" };
+    const doc: Doc = { id: uid(), title: "", body: "", updatedAt: Date.now() };
     const next = [doc, ...docs];
     // Write synchronously so the new page finds the doc in localStorage
     try { localStorage.setItem("docs", JSON.stringify(next)); } catch {}
@@ -65,7 +67,9 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
 
   function update(field: "title" | "body", value: string) {
     setDocs((prev) =>
-      prev.map((d) => (d.id === activeId ? { ...d, [field]: value } : d))
+      prev.map((d) =>
+        d.id === activeId ? { ...d, [field]: value, updatedAt: Date.now() } : d
+      )
     );
   }
 
