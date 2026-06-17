@@ -92,11 +92,12 @@ Remaining tasks, ranked easiest → hardest.
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Not started |
+| 1 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Done ✓ |
 | 2 | **Responsive layout** — side-by-side at desktop width; stacked or collapsible sidebar at phone width (Task 12) | Not started |
 | 3 | **Markdown support** — body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10) | Not started |
 
 Already implemented:
+- **Sidebar sorted by recently updated** — `updatedAt: number` on `Doc`; stamped on new doc + every title/body edit; sidebar sorted descending before filtering (Task 3) ✓
 - **Empty states** — "No Documents Yet" with New Document CTA; "No Documents Match Your Search" with Clear Search CTA in the sidebar (Task 9) ✓
 - **Home page at `/`** — short description and a link to the workspace (Task 1) ✓
 - **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) ✓
@@ -111,6 +112,6 @@ Already implemented:
 
 ## Next To Do
 
-**Sidebar sorted by recently updated (Backlog item 1)**
+**Responsive layout (Backlog item 2)**
 
-Add an `updatedAt: number` (Unix timestamp) field to the `Doc` type in `app/docs/WorkspaceClient.tsx`. Set it on every mutation (new doc, title/body update). Sort the sidebar list by `updatedAt` descending before filtering so the most recently touched document always appears first.
+Make the workspace responsive: side-by-side panes at desktop width; stacked or collapsible sidebar at phone/tablet width (Task 12).
