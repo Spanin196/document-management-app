@@ -97,30 +97,60 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
         >
           + New document
         </button>
-        <ul className="flex flex-col gap-0.5 overflow-y-auto">
-          {filtered.map((doc) => (
-            <li
-              key={doc.id}
-              className={`group flex items-center rounded ${
-                doc.id === activeId ? "bg-gray-100" : "hover:bg-gray-50"
-              }`}
-            >
-              <Link
-                href={`/docs/${doc.id}`}
-                className="min-w-0 flex-1 truncate px-3 py-2 text-sm"
-              >
-                {doc.title || "Untitled"}
-              </Link>
+        <div className="overflow-y-auto" aria-live="polite">
+          {loaded && docs.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
+              <p className="text-sm font-medium text-gray-700">No Documents Yet</p>
+              <p className="text-xs text-gray-400">
+                Create your first document to start organising your work in one place.
+              </p>
               <button
-                onClick={() => deleteDocument(doc.id)}
-                className="mr-1 hidden shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 group-hover:flex"
-                aria-label="Delete document"
+                onClick={newDocument}
+                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50"
               >
-                ×
+                New Document
               </button>
-            </li>
-          ))}
-        </ul>
+            </div>
+          ) : loaded && filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
+              <p className="text-sm font-medium text-gray-700">No Documents Match Your Search</p>
+              <p className="text-xs text-gray-400">
+                No results for &ldquo;{search}&rdquo;. Try a different term.
+              </p>
+              <button
+                onClick={() => setSearch("")}
+                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50"
+              >
+                Clear Search
+              </button>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-0.5">
+              {filtered.map((doc) => (
+                <li
+                  key={doc.id}
+                  className={`group flex items-center rounded ${
+                    doc.id === activeId ? "bg-gray-100" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <Link
+                    href={`/docs/${doc.id}`}
+                    className="min-w-0 flex-1 truncate px-3 py-2 text-sm"
+                  >
+                    {doc.title || "Untitled"}
+                  </Link>
+                  <button
+                    onClick={() => deleteDocument(doc.id)}
+                    className="mr-1 hidden shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 group-hover:flex"
+                    aria-label="Delete document"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </aside>
 
       {/* Editor */}

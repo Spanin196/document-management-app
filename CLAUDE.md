@@ -92,7 +92,7 @@ Tasks ranked easiest → hardest. Status noted where work is complete or partial
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | **Empty states** — readable messages when no documents exist and when search returns no results (Task 9) | Not started |
+| 1 | **Empty states** — readable messages when no documents exist and when search returns no results (Task 9) | ✓ Done |
 | 2 | **Home page at `/`** — short description and a link to the workspace (Task 1) | ✓ Done |
 | 3 | **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) | ✓ Done |
 | 4 | **Workspace at `/docs`** — move the two-pane layout to `/docs`; current `app/page.tsx` becomes the home page (Task 2) | ✓ Done |
@@ -111,11 +111,6 @@ Already implemented (not listed above):
 
 ## Next To Do
 
-**Empty states (Backlog item 1)**
+**Sidebar sorted by recently updated (Backlog item 5)**
 
-Add readable empty-state messages in `app/docs/WorkspaceClient.tsx`:
-
-1. **No documents yet** — when `docs` is empty, replace the blank sidebar list with a short message like "No documents yet. Click + New document to get started."
-2. **No search results** — when `docs` is non-empty but `filtered` is empty (search term matches nothing), show "No documents match your search." in the sidebar list area.
-
-Both conditions are already computable from existing state (`docs.length` and `filtered.length`). No new dependencies or routing changes needed — purely additive UI inside the `<ul>` block in the sidebar.
+Add an `updatedAt: number` (Unix timestamp) field to the `Doc` type in `app/docs/WorkspaceClient.tsx`. Set it on every mutation (new doc, title/body update). Sort the sidebar list by `updatedAt` descending before filtering so the most recently touched document always appears first.
