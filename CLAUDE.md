@@ -92,10 +92,10 @@ Remaining tasks, ranked easiest → hardest.
 
 | # | Feature | Status |
 |---|---|---|
-| 2 | **Responsive layout** — side-by-side at desktop width; stacked or collapsible sidebar at phone width (Task 12) | Not started |
 | 3 | **Markdown support** — body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10) | Not started |
 
 Already implemented:
+- **Responsive layout** — collapsible sidebar overlay on mobile/tablet (< md); hamburger toggle in a fixed header bar; side-by-side panes on desktop (Task 12) ✓
 - **Sidebar sorted by recently updated** — `updatedAt: number` on `Doc`; stamped on new doc + every title/body edit; sidebar sorted descending before filtering (Task 3) ✓
 - **Empty states** — "No Documents Yet" with New Document CTA; "No Documents Match Your Search" with Clear Search CTA in the sidebar (Task 9) ✓
 - **Home page at `/`** — short description and a link to the workspace (Task 1) ✓
@@ -111,6 +111,6 @@ Already implemented:
 
 ## Next To Do
 
-**Responsive layout (Backlog item 2)**
+**Markdown support (Backlog item 3)**
 
-Make the workspace responsive: side-by-side panes at desktop width; stacked or collapsible sidebar at phone/tablet width (Task 12).
+Body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10).
