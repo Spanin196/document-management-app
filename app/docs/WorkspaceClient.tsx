@@ -226,9 +226,23 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
               </div>
             </div>
             {preview ? (
-              <div className="mt-4 flex-1 overflow-y-auto text-base leading-relaxed [&_h1]:mb-3 [&_h1]:mt-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5">
+              <div className="mt-4 flex-1 overflow-y-auto text-base leading-relaxed">
                 {activeDoc.body.trim() ? (
-                  <ReactMarkdown>{activeDoc.body}</ReactMarkdown>
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ children }) => <h1 className="mt-6 mb-3 text-2xl font-bold">{children}</h1>,
+                      h2: ({ children }) => <h2 className="mt-5 mb-2 text-xl font-semibold">{children}</h2>,
+                      h3: ({ children }) => <h3 className="mt-4 mb-2 text-lg font-semibold">{children}</h3>,
+                      p:  ({ children }) => <p className="mb-3">{children}</p>,
+                      ul: ({ children }) => <ul className="mb-3 list-disc pl-5">{children}</ul>,
+                      ol: ({ children }) => <ol className="mb-3 list-decimal pl-5">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                    }}
+                  >
+                    {activeDoc.body}
+                  </ReactMarkdown>
                 ) : (
                   <p className="text-gray-400">Nothing to preview.</p>
                 )}
