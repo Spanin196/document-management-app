@@ -92,7 +92,6 @@ Remaining tasks, ranked easiest → hardest.
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Done ✓ |
 | 2 | **Responsive layout** — side-by-side at desktop width; stacked or collapsible sidebar at phone width (Task 12) | Not started |
 | 3 | **Markdown support** — body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10) | Not started |
 
