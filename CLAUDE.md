@@ -88,22 +88,22 @@ The app runs at http://localhost:3000.
 
 ## Context — Feature Backlog
 
-Tasks ranked easiest → hardest. Status noted where work is complete or partial.
+Remaining tasks, ranked easiest → hardest.
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | **Empty states** — readable messages when no documents exist and when search returns no results (Task 9) | ✓ Done |
-| 2 | **Home page at `/`** — short description and a link to the workspace (Task 1) | ✓ Done |
-| 3 | **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) | ✓ Done |
-| 4 | **Workspace at `/docs`** — move the two-pane layout to `/docs`; current `app/page.tsx` becomes the home page (Task 2) | ✓ Done |
-| 5 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Not started |
-| 6 | **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave (Tasks 5, 6-partial) | ✓ Done |
-| 7 | **Direct navigation to `/docs/[id]`** — loading the URL directly opens the correct document from localStorage; depends on Task 6 above (Task 6-partial) | ✓ Done |
-| 8 | **Document not found page** — navigating to a non-existent document ID shows a clear message and a link back to `/docs` (Task 7) | ✓ Done |
-| 9 | **Responsive layout** — side-by-side at desktop width; stacked or collapsible sidebar at phone width (Task 12) | Not started |
-| 10 | **Markdown support** — body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10) | Not started |
+| 1 | **Sidebar sorted by recently updated** — add an `updatedAt` timestamp to the `Doc` type, set it on every change, sort sidebar list by it (Task 3) | Not started |
+| 2 | **Responsive layout** — side-by-side at desktop width; stacked or collapsible sidebar at phone width (Task 12) | Not started |
+| 3 | **Markdown support** — body field supports headings, bold, italic, bullet lists; toggle or split edit/preview mode (Task 10) | Not started |
 
-Already implemented (not listed above):
+Already implemented:
+- **Empty states** — "No Documents Yet" with New Document CTA; "No Documents Match Your Search" with Clear Search CTA in the sidebar (Task 9) ✓
+- **Home page at `/`** — short description and a link to the workspace (Task 1) ✓
+- **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) ✓
+- **Workspace at `/docs`** — two-pane layout at `/docs`; home page at `/` (Task 2) ✓
+- **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave (Tasks 5, 6-partial) ✓
+- **Direct navigation to `/docs/[id]`** — loading the URL directly opens the correct document from localStorage (Task 6-partial) ✓
+- **Document not found page** — navigating to a non-existent document ID shows a clear message and a link back to `/docs` (Task 7) ✓
 - **New document button** — creates a blank doc and opens it immediately (Task 4) ✓
 - **Persistence across reload** — documents survive a full page reload via localStorage (Task 6-partial) ✓
 - **Enter key jumps to body** — pressing Enter in the title field moves the cursor to the body; no mouse needed (Task 11) ✓
@@ -111,6 +111,6 @@ Already implemented (not listed above):
 
 ## Next To Do
 
-**Sidebar sorted by recently updated (Backlog item 5)**
+**Sidebar sorted by recently updated (Backlog item 1)**
 
 Add an `updatedAt: number` (Unix timestamp) field to the `Doc` type in `app/docs/WorkspaceClient.tsx`. Set it on every mutation (new doc, title/body update). Sort the sidebar list by `updatedAt` descending before filtering so the most recently touched document always appears first.
