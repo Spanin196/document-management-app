@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
 
 type Doc = {
   id: string;
@@ -22,6 +23,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [preview, setPreview] = useState(false);
 
   useEffect(() => {
     try {
@@ -75,7 +77,10 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   }
 
   useEffect(() => {
-    if (activeId) titleRef.current?.focus();
+    if (activeId) {
+      titleRef.current?.focus();
+      setPreview(false);
+    }
   }, [activeId]);
 
   function onTitleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -195,22 +200,48 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
       <main className="flex flex-1 flex-col overflow-hidden p-6 md:p-10">
         {activeDoc ? (
           <>
-            <input
-              ref={titleRef}
-              type="text"
-              placeholder="Title"
-              value={activeDoc.title}
-              onChange={(e) => update("title", e.target.value)}
-              onKeyDown={onTitleKeyDown}
-              className="border-b border-gray-200 pb-3 text-2xl font-semibold outline-none"
-            />
-            <textarea
-              ref={bodyRef}
-              placeholder="Start typing…"
-              value={activeDoc.body}
-              onChange={(e) => update("body", e.target.value)}
-              className="mt-4 flex-1 resize-none text-base leading-relaxed outline-none"
-            />
+            <div className="flex items-end justify-between border-b border-gray-200 pb-3">
+              <input
+                ref={titleRef}
+                type="text"
+                placeholder="Title"
+                value={activeDoc.title}
+                onChange={(e) => update("title", e.target.value)}
+                onKeyDown={onTitleKeyDown}
+                className="min-w-0 flex-1 text-2xl font-semibold outline-none"
+              />
+              <div className="ml-4 flex shrink-0 rounded border border-gray-200 text-xs">
+                <button
+                  onClick={() => setPreview(false)}
+                  className={`px-3 py-1 ${!preview ? "bg-gray-100 font-medium" : "hover:bg-gray-50"}`}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setPreview(true)}
+                  className={`border-l border-gray-200 px-3 py-1 ${preview ? "bg-gray-100 font-medium" : "hover:bg-gray-50"}`}
+                >
+                  Preview
+                </button>
+              </div>
+            </div>
+            {preview ? (
+              <div className="mt-4 flex-1 overflow-y-auto text-base leading-relaxed [&_h1]:mb-3 [&_h1]:mt-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5">
+                {activeDoc.body.trim() ? (
+                  <ReactMarkdown>{activeDoc.body}</ReactMarkdown>
+                ) : (
+                  <p className="text-gray-400">Nothing to preview.</p>
+                )}
+              </div>
+            ) : (
+              <textarea
+                ref={bodyRef}
+                placeholder="Start typing…"
+                value={activeDoc.body}
+                onChange={(e) => update("body", e.target.value)}
+                className="mt-4 flex-1 resize-none text-base leading-relaxed outline-none"
+              />
+            )}
           </>
         ) : initialId && loaded ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-gray-400">
