@@ -7,13 +7,32 @@ import ReactMarkdown from "react-markdown";
 
 type Doc = {
   id: string;
+  slug: string;
   title: string;
   body: string;
   updatedAt: number;
+  deletedAt?: number;
 };
 
 function uid() {
   return Math.random().toString(36).slice(2);
+}
+
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    || "untitled";
+}
+
+function generateSlug(title: string, docs: Doc[], currentId: string): string {
+  const base = slugify(title);
+  const taken = new Set(docs.filter((d) => d.id !== currentId).map((d) => d.slug));
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
 }
 
 function SunIcon() {
@@ -73,15 +92,16 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
-  const activeDoc = docs.find((d) => d.id === activeId) ?? null;
-  const sorted = [...docs].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  const activeDocs = docs.filter((d) => !d.deletedAt);
+  const activeDoc = activeDocs.find((d) => d.slug === activeId || d.id === activeId) ?? null;
+  const sorted = [...activeDocs].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
   const filtered = sorted.filter((d) =>
     d.title.toLowerCase().includes(search.toLowerCase())
   );
 
   function newDocument() {
     if (!loaded) return;
-    const doc: Doc = { id: uid(), title: "", body: "", updatedAt: Date.now() };
+    const doc: Doc = { id: uid(), slug: "", title: "", body: "", updatedAt: Date.now() };
     const next = [doc, ...docs];
     // Write synchronously so the new page finds the doc in localStorage
     try { localStorage.setItem("docs", JSON.stringify(next)); } catch {}
@@ -91,16 +111,20 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
 
   function deleteDocument(id: string) {
     if (!window.confirm("Delete this document? This cannot be undone.")) return;
-    setDocs((prev) => prev.filter((d) => d.id !== id));
-    if (id === activeId) {
+    setDocs((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, deletedAt: Date.now() } : d))
+    );
+    if (activeDoc?.id === id) {
       router.push("/docs");
     }
   }
 
   function update(field: "title" | "body", value: string) {
+    const targetId = activeDoc?.id;
+    if (!targetId) return;
     setDocs((prev) =>
       prev.map((d) =>
-        d.id === activeId ? { ...d, [field]: value, updatedAt: Date.now() } : d
+        d.id === targetId ? { ...d, [field]: value, updatedAt: Date.now() } : d
       )
     );
   }
@@ -117,6 +141,15 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
       e.preventDefault();
       bodyRef.current?.focus();
     }
+  }
+
+  function onTitleBlur() {
+    if (!activeDoc || activeDoc.slug || !activeDoc.title.trim()) return;
+    const slug = generateSlug(activeDoc.title, docs, activeDoc.id);
+    const next = docs.map((d) => (d.id === activeDoc.id ? { ...d, slug } : d));
+    try { localStorage.setItem("docs", JSON.stringify(next)); } catch {}
+    setDocs(next);
+    router.replace(`/docs/${slug}`);
   }
 
   function toggleDark() {
@@ -187,7 +220,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           + New document
         </button>
         <div className="flex-1 overflow-y-auto" aria-live="polite">
-          {loaded && docs.length === 0 ? (
+          {loaded && activeDocs.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No Documents Yet</p>
               <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -219,13 +252,13 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 <li
                   key={doc.id}
                   className={`group flex items-center rounded ${
-                    doc.id === activeId
+                    doc.id === activeDoc?.id
                       ? "bg-gray-100 dark:bg-gray-800"
                       : "hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >
                   <Link
-                    href={`/docs/${doc.id}`}
+                    href={`/docs/${doc.slug || doc.id}`}
                     onClick={() => setSidebarOpen(false)}
                     className="min-w-0 flex-1 truncate px-3 py-2 text-sm dark:text-gray-300"
                   >
@@ -260,6 +293,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 value={activeDoc.title}
                 onChange={(e) => update("title", e.target.value)}
                 onKeyDown={onTitleKeyDown}
+                onBlur={onTitleBlur}
                 className="min-w-0 flex-1 bg-transparent text-2xl font-semibold outline-none placeholder-gray-300 dark:placeholder-gray-600"
               />
               <div className="ml-4 flex shrink-0 items-center gap-2">
