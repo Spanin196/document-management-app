@@ -91,6 +91,7 @@ The app runs at http://localhost:3000.
 All planned features are implemented. See "Already implemented" below.
 
 Already implemented:
+- **Dark mode** — sun/moon toggle in the editor header and mobile header bar; theme persisted via cookie so the server renders `<html class="dark">` from the first byte with no flash; `@variant dark` in Tailwind v4 wires all `dark:` utilities to the `.dark` class (Task 13) ✓
 - **Markdown support** — body field renders headings, bold, italic, bullet lists in preview mode; Edit/Preview toggle in the editor header; `react-markdown@10` (Task 10) ✓
 - **Responsive layout** — collapsible sidebar overlay on mobile/tablet (< md); hamburger toggle in a fixed header bar; side-by-side panes on desktop (Task 12) ✓
 - **Sidebar sorted by recently updated** — `updatedAt: number` on `Doc`; stamped on new doc + every title/body edit; sidebar sorted descending before filtering (Task 3) ✓
