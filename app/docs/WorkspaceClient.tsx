@@ -11,6 +11,7 @@ type Doc = {
   title: string;
   body: string;
   updatedAt: number;
+  deletedAt?: number;
 };
 
 function uid() {
@@ -27,10 +28,10 @@ function slugify(title: string): string {
 
 function generateSlug(title: string, docs: Doc[], currentId: string): string {
   const base = slugify(title);
-  const others = docs.filter((d) => d.id !== currentId);
-  if (!others.some((d) => d.slug === base)) return base;
+  const taken = new Set(docs.filter((d) => d.id !== currentId).map((d) => d.slug));
+  if (!taken.has(base)) return base;
   let n = 2;
-  while (others.some((d) => d.slug === `${base}-${n}`)) n++;
+  while (taken.has(`${base}-${n}`)) n++;
   return `${base}-${n}`;
 }
 
@@ -91,8 +92,9 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
-  const activeDoc = docs.find((d) => d.slug === activeId || d.id === activeId) ?? null;
-  const sorted = [...docs].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  const activeDocs = docs.filter((d) => !d.deletedAt);
+  const activeDoc = activeDocs.find((d) => d.slug === activeId || d.id === activeId) ?? null;
+  const sorted = [...activeDocs].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
   const filtered = sorted.filter((d) =>
     d.title.toLowerCase().includes(search.toLowerCase())
   );
@@ -109,7 +111,9 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
 
   function deleteDocument(id: string) {
     if (!window.confirm("Delete this document? This cannot be undone.")) return;
-    setDocs((prev) => prev.filter((d) => d.id !== id));
+    setDocs((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, deletedAt: Date.now() } : d))
+    );
     if (activeDoc?.id === id) {
       router.push("/docs");
     }
@@ -142,9 +146,9 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   function onTitleBlur() {
     if (!activeDoc || activeDoc.slug || !activeDoc.title.trim()) return;
     const slug = generateSlug(activeDoc.title, docs, activeDoc.id);
-    setDocs((prev) =>
-      prev.map((d) => (d.id === activeDoc.id ? { ...d, slug } : d))
-    );
+    const next = docs.map((d) => (d.id === activeDoc.id ? { ...d, slug } : d));
+    try { localStorage.setItem("docs", JSON.stringify(next)); } catch {}
+    setDocs(next);
     router.replace(`/docs/${slug}`);
   }
 
@@ -216,7 +220,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           + New document
         </button>
         <div className="flex-1 overflow-y-auto" aria-live="polite">
-          {loaded && docs.length === 0 ? (
+          {loaded && activeDocs.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No Documents Yet</p>
               <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -248,7 +252,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 <li
                   key={doc.id}
                   className={`group flex items-center rounded ${
-                    (doc.slug === activeId || doc.id === activeId)
+                    doc.id === activeDoc?.id
                       ? "bg-gray-100 dark:bg-gray-800"
                       : "hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
