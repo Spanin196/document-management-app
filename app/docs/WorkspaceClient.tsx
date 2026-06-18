@@ -184,7 +184,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                   </Link>
                   <button
                     onClick={() => deleteDocument(doc.id)}
-                    className="mr-1 hidden shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 group-hover:flex"
+                    className="mr-1 flex shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 md:hidden md:group-hover:flex"
                     aria-label="Delete document"
                   >
                     ×
