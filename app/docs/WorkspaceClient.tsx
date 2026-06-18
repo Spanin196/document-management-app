@@ -16,6 +16,30 @@ function uid() {
   return Math.random().toString(36).slice(2);
 }
 
+function SunIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
 export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const router = useRouter();
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -24,6 +48,11 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const [loaded, setLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
 
   useEffect(() => {
     try {
@@ -90,14 +119,31 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
     }
   }
 
+  function toggleDark() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    document.cookie = `theme=${next ? "dark" : "light"};path=/;max-age=31536000`;
+  }
+
+  const darkToggleButton = (
+    <button
+      onClick={toggleDark}
+      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      className="rounded p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+    >
+      {dark ? <SunIcon /> : <MoonIcon />}
+    </button>
+  );
+
   return (
-    <div className="flex h-screen flex-col overflow-hidden md:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 md:flex-row">
       {/* Mobile header bar */}
-      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 px-3 md:hidden">
+      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 px-3 dark:border-gray-700 md:hidden">
         <button
           onClick={() => setSidebarOpen((o) => !o)}
           aria-label="Toggle sidebar"
-          className="rounded p-1.5 hover:bg-gray-100"
+          className="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
             <rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor" />
@@ -105,9 +151,10 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
             <rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor" />
           </svg>
         </button>
-        <span className="truncate text-sm font-medium text-gray-700">
+        <span className="flex-1 truncate text-sm font-medium text-gray-700 dark:text-gray-300">
           {activeDoc?.title || "Documents"}
         </span>
+        {darkToggleButton}
       </div>
 
       {/* Backdrop — mobile only, closes sidebar on tap */}
@@ -122,7 +169,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           Mobile: fixed overlay from below the header, slides in from left.
           Desktop: static in the flex row, always visible. */}
       <aside
-        className={`fixed top-12 bottom-0 left-0 z-30 flex w-60 shrink-0 flex-col gap-2 border-r border-gray-200 bg-white p-3 transition-transform duration-200 md:static md:translate-x-0 ${
+        className={`fixed top-12 bottom-0 left-0 z-30 flex w-60 shrink-0 flex-col gap-2 border-r border-gray-200 bg-white p-3 transition-transform duration-200 dark:border-gray-700 dark:bg-gray-900 md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -131,37 +178,37 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           placeholder="Search…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded border border-gray-200 px-3 py-2 text-sm outline-none"
+          className="w-full rounded border border-gray-200 px-3 py-2 text-sm outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
         />
         <button
           onClick={newDocument}
-          className="w-full rounded border border-gray-200 px-3 py-2 text-sm text-left hover:bg-gray-50"
+          className="w-full rounded border border-gray-200 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           + New document
         </button>
-        <div className="overflow-y-auto" aria-live="polite">
+        <div className="flex-1 overflow-y-auto" aria-live="polite">
           {loaded && docs.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
-              <p className="text-sm font-medium text-gray-700">No Documents Yet</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No Documents Yet</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 Create your first document to start organising your work in one place.
               </p>
               <button
                 onClick={newDocument}
-                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50"
+                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 New Document
               </button>
             </div>
           ) : loaded && filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
-              <p className="text-sm font-medium text-gray-700">No Documents Match Your Search</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No Documents Match Your Search</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 No results for &ldquo;{search}&rdquo;. Try a different term.
               </p>
               <button
                 onClick={() => setSearch("")}
-                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50"
+                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 Clear Search
               </button>
@@ -172,19 +219,21 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 <li
                   key={doc.id}
                   className={`group flex items-center rounded ${
-                    doc.id === activeId ? "bg-gray-100" : "hover:bg-gray-50"
+                    doc.id === activeId
+                      ? "bg-gray-100 dark:bg-gray-800"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >
                   <Link
                     href={`/docs/${doc.id}`}
                     onClick={() => setSidebarOpen(false)}
-                    className="min-w-0 flex-1 truncate px-3 py-2 text-sm"
+                    className="min-w-0 flex-1 truncate px-3 py-2 text-sm dark:text-gray-300"
                   >
                     {doc.title || "Untitled"}
                   </Link>
                   <button
                     onClick={() => deleteDocument(doc.id)}
-                    className="mr-1 flex shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 md:hidden md:group-hover:flex"
+                    className="mr-1 flex shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300 md:hidden md:group-hover:flex"
                     aria-label="Delete document"
                   >
                     ×
@@ -194,13 +243,16 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
             </ul>
           )}
         </div>
+        <div className="flex justify-end border-t border-gray-200 pt-2 dark:border-gray-700">
+          {darkToggleButton}
+        </div>
       </aside>
 
       {/* Editor */}
       <main className="flex flex-1 flex-col overflow-hidden p-6 md:p-10">
         {activeDoc ? (
           <>
-            <div className="flex items-end justify-between border-b border-gray-200 pb-3">
+            <div className="flex items-end justify-between border-b border-gray-200 pb-3 dark:border-gray-700">
               <input
                 ref={titleRef}
                 type="text"
@@ -208,21 +260,24 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 value={activeDoc.title}
                 onChange={(e) => update("title", e.target.value)}
                 onKeyDown={onTitleKeyDown}
-                className="min-w-0 flex-1 text-2xl font-semibold outline-none"
+                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold outline-none placeholder-gray-300 dark:placeholder-gray-600"
               />
-              <div className="ml-4 flex shrink-0 rounded border border-gray-200 text-xs">
-                <button
-                  onClick={() => setPreview(false)}
-                  className={`px-3 py-1 ${!preview ? "bg-gray-100 font-medium" : "hover:bg-gray-50"}`}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => setPreview(true)}
-                  className={`border-l border-gray-200 px-3 py-1 ${preview ? "bg-gray-100 font-medium" : "hover:bg-gray-50"}`}
-                >
-                  Preview
-                </button>
+              <div className="ml-4 flex shrink-0 items-center gap-2">
+                <div className="flex rounded border border-gray-200 text-xs dark:border-gray-700">
+                  <button
+                    onClick={() => setPreview(false)}
+                    className={`px-3 py-1 ${!preview ? "bg-gray-100 font-medium dark:bg-gray-800" : "hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"}`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setPreview(true)}
+                    className={`border-l border-gray-200 px-3 py-1 dark:border-gray-700 ${preview ? "bg-gray-100 font-medium dark:bg-gray-800" : "hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"}`}
+                  >
+                    Preview
+                  </button>
+                </div>
+                {darkToggleButton}
               </div>
             </div>
             {preview ? (
@@ -244,7 +299,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                     {activeDoc.body}
                   </ReactMarkdown>
                 ) : (
-                  <p className="text-gray-400">Nothing to preview.</p>
+                  <p className="text-gray-400 dark:text-gray-600">Nothing to preview.</p>
                 )}
               </div>
             ) : (
@@ -253,22 +308,22 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 placeholder="Start typing…"
                 value={activeDoc.body}
                 onChange={(e) => update("body", e.target.value)}
-                className="mt-4 flex-1 resize-none text-base leading-relaxed outline-none"
+                className="mt-4 flex-1 resize-none bg-transparent text-base leading-relaxed outline-none placeholder-gray-300 dark:placeholder-gray-600"
               />
             )}
           </>
         ) : initialId && loaded ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-gray-400">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-gray-400 dark:text-gray-600">
             <p>Document not found.</p>
             <Link
               href="/docs"
-              className="text-gray-500 underline underline-offset-2"
+              className="text-gray-500 underline underline-offset-2 dark:text-gray-400"
             >
               Back to workspace
             </Link>
           </div>
         ) : loaded ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
+          <div className="flex flex-1 items-center justify-center text-sm text-gray-400 dark:text-gray-600">
             Click &quot;+ New document&quot; to get started.
           </div>
         ) : null}

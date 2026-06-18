@@ -4,16 +4,16 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-10">
       <div className="max-w-md text-center">
-        <h1 className="text-3xl font-semibold text-gray-900">
+        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
           Document Manager
         </h1>
-        <p className="mt-3 text-base leading-relaxed text-gray-500">
+        <p className="mt-3 text-base leading-relaxed text-gray-500 dark:text-gray-400">
           A simple workspace to write, search, and organise your documents.
           Everything is saved locally in your browser — no account required.
         </p>
         <Link
           href="/docs"
-          className="mt-8 inline-block rounded border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="mt-8 inline-block rounded border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Go to workspace
         </Link>
