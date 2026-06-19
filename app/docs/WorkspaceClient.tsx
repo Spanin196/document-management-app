@@ -19,11 +19,12 @@ function uid() {
 }
 
 function slugify(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    || "untitled";
+  return (
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "untitled"
+  );
 }
 
 function generateSlug(title: string, docs: Doc[], currentId: string): string {
@@ -62,7 +63,7 @@ function MoonIcon() {
 export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const router = useRouter();
   const [docs, setDocs] = useState<Doc[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(initialId ?? null);
+  const [activeId] = useState<string | null>(initialId ?? null);
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -103,7 +104,6 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
     if (!loaded) return;
     const doc: Doc = { id: uid(), slug: "", title: "", body: "", updatedAt: Date.now() };
     const next = [doc, ...docs];
-    // Write synchronously so the new page finds the doc in localStorage
     try { localStorage.setItem("docs", JSON.stringify(next)); } catch {}
     setDocs(next);
     router.push(`/docs/${doc.id}`);
@@ -163,20 +163,21 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
     <button
       onClick={toggleDark}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="rounded p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+      className="rounded-lg p-1.5 text-ink-muted hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
     >
       {dark ? <SunIcon /> : <MoonIcon />}
     </button>
   );
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 md:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-canvas text-ink md:flex-row">
+
       {/* Mobile header bar */}
-      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 px-3 dark:border-gray-700 md:hidden">
+      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-black/5 bg-surface px-4 dark:border-white/5 md:hidden">
         <button
           onClick={() => setSidebarOpen((o) => !o)}
           aria-label="Toggle sidebar"
-          className="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="rounded-lg p-1.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
             <rect y="3" width="18" height="1.5" rx="0.75" fill="currentColor" />
@@ -184,64 +185,67 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
             <rect y="13.5" width="18" height="1.5" rx="0.75" fill="currentColor" />
           </svg>
         </button>
-        <span className="flex-1 truncate text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span className="flex-1 truncate text-sm font-medium text-ink-muted">
           {activeDoc?.title || "Documents"}
         </span>
         {darkToggleButton}
       </div>
 
-      {/* Backdrop — mobile only, closes sidebar on tap */}
+      {/* Backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/20 md:hidden"
+          className="fixed inset-0 z-20 bg-ink/10 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar
-          Mobile: fixed overlay from below the header, slides in from left.
-          Desktop: static in the flex row, always visible. */}
+      {/* Sidebar */}
       <aside
-        className={`fixed top-12 bottom-0 left-0 z-30 flex w-60 shrink-0 flex-col gap-2 border-r border-gray-200 bg-white p-3 transition-transform duration-200 dark:border-gray-700 dark:bg-gray-900 md:static md:translate-x-0 ${
+        className={`fixed top-12 bottom-0 left-0 z-30 flex w-64 shrink-0 flex-col gap-3 bg-surface border-r border-black/5 dark:border-white/5 p-4 transition-transform duration-200 md:static md:top-0 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
+        {/* Search */}
         <input
           type="text"
           placeholder="Search…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded border border-gray-200 px-3 py-2 text-sm outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
+          className="w-full rounded-xl border border-black/8 bg-black/3 px-3 py-2 text-xs outline-none placeholder-ink-muted dark:border-white/8 dark:bg-white/5"
         />
+
+        {/* New document — primary teal action */}
         <button
           onClick={newDocument}
-          className="w-full rounded border border-gray-200 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="w-full rounded-xl bg-brand px-4 py-2.5 text-left text-sm font-semibold text-white shadow-sm hover:bg-brand/90 active:bg-brand/80 transition-colors"
         >
           + New document
         </button>
+
+        {/* Document list */}
         <div className="flex-1 overflow-y-auto" aria-live="polite">
           {loaded && activeDocs.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No Documents Yet</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Create your first document to start organising your work in one place.
+            <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
+              <p className="text-sm font-semibold text-ink">No Documents Yet</p>
+              <p className="text-xs leading-relaxed text-ink-muted">
+                Create your first document to start organising your work.
               </p>
               <button
                 onClick={newDocument}
-                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="mt-2 rounded-lg border border-brand/25 px-3 py-1.5 text-xs font-medium text-brand hover:bg-brand/8 transition-colors"
               >
                 New Document
               </button>
             </div>
           ) : loaded && filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No Documents Match Your Search</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                No results for &ldquo;{search}&rdquo;. Try a different term.
+            <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
+              <p className="text-sm font-semibold text-ink">No Results</p>
+              <p className="text-xs leading-relaxed text-ink-muted">
+                Nothing matches &ldquo;{search}&rdquo;.
               </p>
               <button
                 onClick={() => setSearch("")}
-                className="mt-1 rounded border border-gray-200 px-3 py-1.5 text-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="mt-2 rounded-lg border border-brand/25 px-3 py-1.5 text-xs font-medium text-brand hover:bg-brand/8 transition-colors"
               >
                 Clear Search
               </button>
@@ -251,22 +255,26 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
               {filtered.map((doc) => (
                 <li
                   key={doc.id}
-                  className={`group flex items-center rounded ${
+                  className={`group flex items-center rounded-xl transition-colors ${
                     doc.id === activeDoc?.id
-                      ? "bg-gray-100 dark:bg-gray-800"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                      ? "bg-brand/10"
+                      : "hover:bg-black/4 dark:hover:bg-white/6"
                   }`}
                 >
                   <Link
                     href={`/docs/${doc.slug || doc.id}`}
                     onClick={() => setSidebarOpen(false)}
-                    className="min-w-0 flex-1 truncate px-3 py-2 text-sm dark:text-gray-300"
+                    className={`min-w-0 flex-1 truncate px-3 py-2 text-sm transition-colors ${
+                      doc.id === activeDoc?.id
+                        ? "font-medium text-brand"
+                        : "text-ink/75 dark:text-ink/80"
+                    }`}
                   >
                     {doc.title || "Untitled"}
                   </Link>
                   <button
                     onClick={() => deleteDocument(doc.id)}
-                    className="mr-1 flex shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300 md:hidden md:group-hover:flex"
+                    className="mr-2 flex shrink-0 rounded-lg p-1 text-ink-muted/40 hover:bg-black/8 hover:text-ink dark:hover:bg-white/10 transition-colors md:hidden md:group-hover:flex"
                     aria-label="Delete document"
                   >
                     ×
@@ -276,91 +284,109 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
             </ul>
           )}
         </div>
-        <div className="flex justify-end border-t border-gray-200 pt-2 dark:border-gray-700">
+
+        {/* Dark mode toggle */}
+        <div className="flex justify-end border-t border-black/5 pt-3 dark:border-white/5">
           {darkToggleButton}
         </div>
       </aside>
 
       {/* Editor */}
-      <main className="flex flex-1 flex-col overflow-hidden p-6 md:p-10">
-        {activeDoc ? (
-          <>
-            <div className="flex items-end justify-between border-b border-gray-200 pb-3 dark:border-gray-700">
-              <input
-                ref={titleRef}
-                type="text"
-                placeholder="Title"
-                value={activeDoc.title}
-                onChange={(e) => update("title", e.target.value)}
-                onKeyDown={onTitleKeyDown}
-                onBlur={onTitleBlur}
-                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold outline-none placeholder-gray-300 dark:placeholder-gray-600"
-              />
-              <div className="ml-4 flex shrink-0 items-center gap-2">
-                <div className="flex rounded border border-gray-200 text-xs dark:border-gray-700">
-                  <button
-                    onClick={() => setPreview(false)}
-                    className={`px-3 py-1 ${!preview ? "bg-gray-100 font-medium dark:bg-gray-800" : "hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"}`}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setPreview(true)}
-                    className={`border-l border-gray-200 px-3 py-1 dark:border-gray-700 ${preview ? "bg-gray-100 font-medium dark:bg-gray-800" : "hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"}`}
-                  >
-                    Preview
-                  </button>
+      <main className="flex flex-1 flex-col overflow-hidden px-6 py-8 md:px-16 md:py-12">
+        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+          {activeDoc ? (
+            <>
+              {/* Title row */}
+              <div className="flex items-center justify-between border-b border-black/6 pb-4 dark:border-white/6">
+                <input
+                  ref={titleRef}
+                  type="text"
+                  placeholder="Untitled"
+                  value={activeDoc.title}
+                  onChange={(e) => update("title", e.target.value)}
+                  onKeyDown={onTitleKeyDown}
+                  onBlur={onTitleBlur}
+                  className="min-w-0 flex-1 bg-transparent font-display text-3xl outline-none placeholder-ink-muted/40"
+                />
+                <div className="ml-4 flex shrink-0 items-center gap-2">
+                  {/* Edit / Preview pill */}
+                  <div className="flex rounded-full border border-black/8 bg-black/3 p-0.5 text-xs dark:border-white/8 dark:bg-white/5">
+                    <button
+                      onClick={() => setPreview(false)}
+                      className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
+                        !preview
+                          ? "bg-ink text-surface"
+                          : "text-ink-muted hover:text-ink"
+                      }`}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setPreview(true)}
+                      className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
+                        preview
+                          ? "bg-ink text-surface"
+                          : "text-ink-muted hover:text-ink"
+                      }`}
+                    >
+                      Preview
+                    </button>
+                  </div>
+                  {darkToggleButton}
                 </div>
-                {darkToggleButton}
               </div>
+
+              {/* Body */}
+              {preview ? (
+                <div className="mt-6 flex-1 overflow-y-auto text-base leading-loose">
+                  {activeDoc.body.trim() ? (
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ children }) => <h1 className="font-display mt-6 mb-3 text-2xl text-ink">{children}</h1>,
+                        h2: ({ children }) => <h2 className="font-display mt-5 mb-2 text-xl text-ink">{children}</h2>,
+                        h3: ({ children }) => <h3 className="mt-4 mb-2 text-lg font-semibold text-ink">{children}</h3>,
+                        p:  ({ children }) => <p className="mb-4 text-ink/85">{children}</p>,
+                        ul: ({ children }) => <ul className="mb-4 list-disc pl-5">{children}</ul>,
+                        ol: ({ children }) => <ol className="mb-4 list-decimal pl-5">{children}</ol>,
+                        li: ({ children }) => <li className="mb-1 text-ink/85">{children}</li>,
+                        strong: ({ children }) => <strong className="font-bold text-ink">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                      }}
+                    >
+                      {activeDoc.body}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="text-ink-muted">Nothing to preview yet.</p>
+                  )}
+                </div>
+              ) : (
+                <textarea
+                  ref={bodyRef}
+                  placeholder="Start writing…"
+                  value={activeDoc.body}
+                  onChange={(e) => update("body", e.target.value)}
+                  className="mt-6 flex-1 resize-none bg-transparent text-base leading-loose outline-none placeholder-ink-muted/40"
+                />
+              )}
+            </>
+          ) : initialId && loaded ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3">
+              <p className="text-sm text-ink-muted">Document not found.</p>
+              <Link
+                href="/docs"
+                className="text-sm font-semibold text-brand hover:text-brand/80 transition-colors"
+              >
+                ← Back to workspace
+              </Link>
             </div>
-            {preview ? (
-              <div className="mt-4 flex-1 overflow-y-auto text-base leading-relaxed">
-                {activeDoc.body.trim() ? (
-                  <ReactMarkdown
-                    components={{
-                      h1: ({ children }) => <h1 className="mt-6 mb-3 text-2xl font-bold">{children}</h1>,
-                      h2: ({ children }) => <h2 className="mt-5 mb-2 text-xl font-semibold">{children}</h2>,
-                      h3: ({ children }) => <h3 className="mt-4 mb-2 text-lg font-semibold">{children}</h3>,
-                      p:  ({ children }) => <p className="mb-3">{children}</p>,
-                      ul: ({ children }) => <ul className="mb-3 list-disc pl-5">{children}</ul>,
-                      ol: ({ children }) => <ol className="mb-3 list-decimal pl-5">{children}</ol>,
-                      li: ({ children }) => <li className="mb-1">{children}</li>,
-                      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                      em: ({ children }) => <em className="italic">{children}</em>,
-                    }}
-                  >
-                    {activeDoc.body}
-                  </ReactMarkdown>
-                ) : (
-                  <p className="text-gray-400 dark:text-gray-600">Nothing to preview.</p>
-                )}
-              </div>
-            ) : (
-              <textarea
-                ref={bodyRef}
-                placeholder="Start typing…"
-                value={activeDoc.body}
-                onChange={(e) => update("body", e.target.value)}
-                className="mt-4 flex-1 resize-none bg-transparent text-base leading-relaxed outline-none placeholder-gray-300 dark:placeholder-gray-600"
-              />
-            )}
-          </>
-        ) : initialId && loaded ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-gray-400 dark:text-gray-600">
-            <p>Document not found.</p>
-            <Link
-              href="/docs"
-              className="text-gray-500 underline underline-offset-2 dark:text-gray-400"
-            >
-              Back to workspace
-            </Link>
-          </div>
-        ) : loaded ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-gray-400 dark:text-gray-600">
-            Click &quot;+ New document&quot; to get started.
-          </div>
-        ) : null}
+          ) : loaded ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+              <p className="text-sm text-ink-muted">
+                Select a document or create a new one.
+              </p>
+            </div>
+          ) : null}
+        </div>
       </main>
     </div>
   );
