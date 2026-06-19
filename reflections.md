@@ -59,6 +59,45 @@ Both bugs would have been invisible until the feature was tested in the browser.
 ## 4. The Design Pass
 *What specific visual direction did you give Claude Code (tone, typography, spacing, colour, components), what changed from the scaffolded default, and which iteration finally felt right?*
 
+### Direction given to the agent
+
+The brief was anchored to two references: the Ridwell app (warm, community-centric, friendly interface) and the Midnight Gospel light palette (soft pastels with unexpected pops of cosmic colour). The target feeling was **Approachable Clarity** — a document tool that feels calm and human rather than clinical and corporate. The specific axes were:
+
+- **Colour:** replace the pure white background and cold gray scale with a warm alabaster cream (`#FAF9F5`) canvas and a rich charcoal ink (`#2E2D30`). Introduce a single brand colour, teal (`#1EA2A4`), as the only strong accent — used exclusively for the primary action and active states.
+- **Typography:** load DM Serif Display as `font-display` for document titles and headings (editorial, warm, not a form field), and Plus Jakarta Sans as the UI body font (friendly, rounded geometry replacing Geist).
+- **Spacing:** generous horizontal padding in the editor (`px-16` on desktop) with a `max-w-2xl` centred column, so the text reads like a page on a desk rather than a panel flush against the sidebar.
+- **Component shape:** move from small `rounded` (4 px) to `rounded-xl` (12 px) on sidebar items and inputs, `rounded-2xl` on the home CTA, and `rounded-full` on the Edit/Preview toggle — softer, friendlier edges throughout.
+- **Hierarchy:** make one thing clearly primary. The New Document button should be the loudest element in the sidebar; everything else should recede.
+
+### What changed from the scaffolded default
+
+| Element | Before (scaffold) | After (design pass) |
+|---|---|---|
+| **Background** | `bg-white` — pure cold white | `bg-canvas` — warm alabaster `#FAF9F5` |
+| **Text colour** | `text-gray-900` — neutral gray | `text-ink` — rich charcoal `#2E2D30` |
+| **Heading font** | Geist Sans `text-2xl font-semibold` | DM Serif Display `font-display text-3xl` |
+| **UI font** | Geist Sans | Plus Jakarta Sans |
+| **New Document button** | `border border-gray-200` — identical style to the search input, no hierarchy | `bg-brand text-white rounded-xl` — solid teal fill, unmistakably primary |
+| **Search input** | Same border and padding as the button, `text-sm` | Ghost background, `text-xs`, near-invisible border — recedes behind the button |
+| **Active sidebar item** | `bg-gray-100` gray fill | `bg-brand/10` teal tint + `text-brand font-medium` link — colour carries meaning |
+| **Border radius** | `rounded` (4 px) on most elements | `rounded-xl` (12 px) on sidebar, `rounded-full` on pill toggle |
+| **Edit/Preview toggle** | Rectangular bordered box, gray active fill | Pill shape `rounded-full`, ink-filled active state (`bg-ink text-surface`) |
+| **Editor padding** | `p-6 md:p-10` — text runs edge-to-edge | `px-16 md:py-12` + `max-w-2xl mx-auto` — centred column with breathing room |
+| **Line height** | `leading-relaxed` | `leading-loose` — slightly more open |
+| **Home page CTA** | `border border-gray-300` outlined button | `bg-brand rounded-2xl` solid teal pill |
+| **Home page headline** | `text-3xl font-semibold` Sans-serif | `font-display text-5xl` DM Serif Display |
+| **Dark mode tokens** | Per-element `dark:` classes throughout | Semantic CSS variables (`--canvas`, `--ink`, `--surface`) that flip in `.dark` — most `dark:` variants removed |
+
+### Which iteration felt right
+
+The first pass submitted was refactored before the PR was opened: the initial attempt kept neutral grays and tightened spacing but added no personality. After reviewing it in the browser it was clear the app still looked like a utility — the only change a user would notice was slightly tighter rows.
+
+The second pass (the one that shipped) committed to the brief fully: warm cream background, DM Serif Display on the title, solid teal button. The shift in the title field was the most noticeable improvement — going from a `text-2xl font-semibold` Geist input to a `text-3xl font-display` DM Serif heading changes how the document feels to write in. The serif signals "this is a document", not a web form.
+
+The teal button in the sidebar was the second clearest win: in the scaffold, the search input and New Document button were visually indistinguishable — same border, same padding, same font size. After the pass, the button is the only thing with colour in the sidebar; the search input disappears into the background.
+
+The PR review caught two regressions before merge: `activeId` was frozen in `useState` (navigating between documents showed the wrong one), and the `@media (prefers-color-scheme: dark)` block had been removed (first-time OS dark-mode visitors always saw the light theme). Both were fixed in a follow-up commit before the branch was squashed.
+
 ---
 
 ## 5. Harder Than Expected
