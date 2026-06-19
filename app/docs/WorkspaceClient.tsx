@@ -63,7 +63,7 @@ function MoonIcon() {
 export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const router = useRouter();
   const [docs, setDocs] = useState<Doc[]>([]);
-  const [activeId] = useState<string | null>(initialId ?? null);
+  const activeId = initialId ?? null;
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);

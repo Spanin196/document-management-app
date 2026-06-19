@@ -10,6 +10,15 @@
   --surface:   #FFFFFF;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas:    #1C1A19;
+    --ink:       #EDE9E3;
+    --ink-muted: #9E9A98;
+    --surface:   #252220;
+  }
+}
+
 .dark {
   --canvas:    #1C1A19;
   --ink:       #EDE9E3;
