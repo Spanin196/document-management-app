@@ -54,6 +54,16 @@ Both bugs would have been invisible until the feature was tested in the browser.
 ## 3. CLAUDE.md Catching Drift
 *One moment where CLAUDE.md caught the agent drifting: what did it attempt, and how did CLAUDE.md correct it?*
 
+### What the agent attempted
+
+During the dark-mode task (Task 13) the agent proposed using a third-party cookie library to handle reading and writing the theme preference. The reasoning was that a helper would abstract browser cookie serialisation and make the server-side read more ergonomic. It named the package and was ready to install it.
+
+### How CLAUDE.md corrected it
+
+Rule 1 in CLAUDE.md is explicit: *"Do not add any new libraries without asking first. Propose the library, explain why it is needed, and wait for approval before installing."* The agent flagged the intention rather than running `npm install`, and when the question was put to the project owner the answer was no — Next.js already ships `next/headers` for reading cookies in Server Components and the browser `document.cookie` API for writing them from the client. No new dependency was needed.
+
+The final implementation uses `cookies()` from `next/headers` in the root layout (Server Component) to read the `theme` cookie and conditionally add `dark` to `<html>`, and a plain `document.cookie` assignment in the toggle handler on the client. The CLAUDE.md constraint pushed the agent toward the platform primitive rather than the convenience library, which also removed a potential hydration edge case the library would have introduced.
+
 ---
 
 ## 4. The Design Pass
