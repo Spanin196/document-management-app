@@ -201,7 +201,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-12 bottom-0 left-0 z-30 flex w-64 shrink-0 flex-col gap-3 bg-cream border-r border-black/5 dark:border-white/5 p-4 transition-transform duration-200 md:static md:top-0 md:w-[15vw] md:min-w-72 md:translate-x-0 ${
+        className={`fixed top-12 bottom-0 left-0 z-30 flex w-64 shrink-0 flex-col gap-3 bg-lavender dark:bg-cream border-r border-black/5 dark:border-white/5 p-4 transition-transform duration-200 md:static md:top-0 md:w-[15vw] md:min-w-72 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -285,15 +285,17 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           )}
         </div>
 
-        {/* Footer: home link + dark mode toggle */}
-        <div className="flex items-center justify-between border-t border-black/5 pt-3 dark:border-white/5">
+        {/* Footer: home button + dark mode toggle */}
+        <div className="flex flex-col gap-2 border-t border-black/5 pt-3 dark:border-white/5">
           <Link
             href="/"
-            className="text-xs font-medium text-ink-muted hover:text-ink transition-colors"
+            className="w-full rounded-xl bg-brand px-4 py-2.5 text-left text-sm font-semibold text-white shadow-sm hover:bg-brand/90 active:bg-brand/80 transition-colors"
           >
             ← Home
           </Link>
-          {darkToggleButton}
+          <div className="flex justify-end">
+            {darkToggleButton}
+          </div>
         </div>
       </aside>
 
