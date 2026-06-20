@@ -4,7 +4,8 @@
 
 /* Semantic color tokens — adapt automatically in dark mode */
 :root {
-  --canvas:    #FAF9F5;
+  --canvas:    #FEFBE6;
+  --cream:     #FAF9F5;
   --ink:       #2E2D30;
   --ink-muted: #757279;
   --surface:   #FFFFFF;
@@ -12,7 +13,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --canvas:    #1C1A19;
+    --canvas:    #1C1A10;
+    --cream:     #1C1A19;
     --ink:       #EDE9E3;
     --ink-muted: #9E9A98;
     --surface:   #252220;
@@ -20,7 +22,8 @@
 }
 
 .dark {
-  --canvas:    #1C1A19;
+  --canvas:    #1C1A10;
+  --cream:     #1C1A19;
   --ink:       #EDE9E3;
   --ink-muted: #9E9A98;
   --surface:   #252220;
@@ -29,6 +32,7 @@
 @theme inline {
   /* Semantic palette */
   --color-canvas:    var(--canvas);
+  --color-cream:     var(--cream);
   --color-ink:       var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-surface:   var(--surface);
@@ -45,6 +49,10 @@
   --font-sans:    var(--font-jakarta);
   --font-display: var(--font-dm-serif);
   --font-mono:    var(--font-geist-mono);
+}
+
+html {
+  font-size: 20px;
 }
 
 body {

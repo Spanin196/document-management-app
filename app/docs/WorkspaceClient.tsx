@@ -201,7 +201,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-12 bottom-0 left-0 z-30 flex w-64 shrink-0 flex-col gap-3 bg-surface border-r border-black/5 dark:border-white/5 p-4 transition-transform duration-200 md:static md:top-0 md:translate-x-0 ${
+        className={`fixed top-12 bottom-0 left-0 z-30 flex w-64 shrink-0 flex-col gap-3 bg-cream border-r border-black/5 dark:border-white/5 p-4 transition-transform duration-200 md:static md:top-0 md:w-[15vw] md:min-w-72 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -285,8 +285,14 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           )}
         </div>
 
-        {/* Dark mode toggle */}
-        <div className="flex justify-end border-t border-black/5 pt-3 dark:border-white/5">
+        {/* Footer: home link + dark mode toggle */}
+        <div className="flex items-center justify-between border-t border-black/5 pt-3 dark:border-white/5">
+          <Link
+            href="/"
+            className="text-xs font-medium text-ink-muted hover:text-ink transition-colors"
+          >
+            ← Home
+          </Link>
           {darkToggleButton}
         </div>
       </aside>
