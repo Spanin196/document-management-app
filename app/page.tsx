@@ -11,9 +11,12 @@ export default function Home() {
           A calm place to write, search, and organise your documents.
           Everything lives in your browser — no account required.
         </p>
+        <p className="mt-10 font-display text-4xl italic leading-snug text-lavender">
+          Just Be Here Now
+        </p>
         <Link
           href="/docs"
-          className="mt-10 inline-block rounded-2xl bg-brand px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-brand/90 transition-colors"
+          className="mt-6 inline-block rounded-2xl bg-brand px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-brand/90 transition-colors"
         >
           Go to workspace →
         </Link>
