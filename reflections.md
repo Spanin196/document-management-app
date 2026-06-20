@@ -103,9 +103,31 @@ The PR review caught two regressions before merge: `activeId` was frozen in `use
 ## 5. Harder Than Expected
 *One thing that was harder than expected compared to the plain-HTML app from the static-site lesson.*
 
+### Getting the design to match what was in my head
+
+In the static-site lesson, visual changes are immediate: you edit a CSS rule, save, and the browser reflects it in under a second. Working through an agent adds a layer of indirection that turns visual iteration into a slower, more verbal process. Describing colour, weight, and spatial relationships in natural language is imprecise — "a light note of lavender" means something specific to me and something slightly different to the model, and the gap only becomes visible once the change lands in the browser.
+
+This showed up concretely during the design pass: the first submitted version was technically consistent with the brief (correct hex codes, correct font names) but felt wrong when reviewed in the browser — it had the components of the design without its feeling. A second full pass was needed before it read as intentionally warm rather than accidentally off-white. The sidebar colour went through a similar cycle in a later session: cosmic lavender `#B3A2C7` was too saturated, a pale tint `#EDE9F6` still felt arbitrary, and the final answer was simply to remove the colour and use the cream baseline — a decision that only became clear by seeing the alternatives in context.
+
+The underlying constraint is that the agent cannot see the screen. Every review loop requires the human to open the browser, evaluate the result, and translate a visual reaction ("too intense", "too clinical") back into language precise enough to produce a different outcome. In plain HTML this feedback loop is sub-second and direct. Here it takes at least one full round-trip per adjustment, and colour decisions often take two or three.
+
+A secondary challenge was the `localStorage` hydration mismatch. In a plain-HTML app all code runs in the browser and `localStorage` is always available. In Next.js the initial render runs on the server, where `localStorage` does not exist. Reading it inside a `useEffect` avoids the crash, but it introduces a render where the document list is empty before snapping to the stored state — a flash that required a `loaded` guard flag to suppress. There is no equivalent concept in a static site; the problem does not exist until you move to a framework with server-side rendering.
+
 ---
 
 ## 6. The docs/ Folder Retrospective
 *What you would keep or change in your docs/ folder next time: what was useful, what was noise?*
+
+### What to keep
+
+**`design-brief.md`** was the most useful document in the folder. Having exact hex codes, font names, and labelled categories (brand, accent, semantic) meant the agent never had to guess at colour values or invent a typographic pairing. Every concrete token in the brief (`#1EA2A4`, `DM Serif Display`, `rounded-xl`) landed in the code correctly on the first attempt. Vague direction ("make it feel warm") would have produced a first pass that required far more correction.
+
+**Reference docs cited explicitly in the prompt** (the `nextjs-link-component.md` snippet pasted in Section 2) were effective precisely because they were attached at the moment of use. The agent read them, applied them, and the correct import paths ended up in the code.
+
+### What to change
+
+**The design brief was written for a human reader, not for an agent.** The narrative sections — the executive summary, the general atmosphere description, the iconography guidance — consumed space without influencing the output. The agent extracted the colour table and the font names and largely ignored the rest. Next time the document would be shorter: a token table, a component-by-component description, and a one-line feeling statement. Everything else is better kept in a mood board or a separate human-facing document that is never pasted into the conversation.
+
+**Reference docs should be versioned.** `nextjs-link-component.md` was a snapshot of the Link API at one point in time. The node_modules docs superseded it in the same session. Keeping both creates ambiguity about which is authoritative. A note at the top of each reference doc stating the Next.js version it was written against would have made it immediately clear when to defer to the bundled docs instead.
 
 ---
