@@ -347,7 +347,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                         h3: ({ children }) => <h3 className="mt-4 mb-2 text-lg font-semibold text-ink">{children}</h3>,
                         p:  ({ children }) => <p className="mb-4 text-ink/85">{children}</p>,
                         ul: ({ children }) => <ul className="mb-4 list-disc pl-5">{children}</ul>,
-                        ol: ({ children }) => <ol className="mb-4 list-decimal pl-5">{children}</ol>,
+                        ol: ({ children }) => <ol className="mb-4 list-decimal pl-8">{children}</ol>,
                         li: ({ children }) => <li className="mb-1 text-ink/85">{children}</li>,
                         strong: ({ children }) => <strong className="font-bold text-ink">{children}</strong>,
                         em: ({ children }) => <em className="italic">{children}</em>,
