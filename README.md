@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Document Manager
 
-## Getting Started
+A calm, single-user document workspace built with Next.js 16 (App Router), React 19, and Tailwind CSS v4. Write, search, and organise documents entirely in the browser — no account, no backend, no file uploads required.
 
-First, run the development server:
+## What it does
+
+- **Two-pane workspace** at `/docs` — collapsible sidebar on the left, full-width editor on the right
+- **Per-document URLs** — each document gets a slug derived from its title (e.g. `/docs/meeting-notes`); direct navigation and sharing work out of the box
+- **Autosave** — every keystroke is persisted to `localStorage`; documents survive full page reloads
+- **Title search** — sidebar filters documents in real time as you type
+- **Markdown preview** — toggle between Edit and Preview mode; headings, bold, italic, and lists render correctly
+- **Empty states** — clear prompts when no documents exist or no results match a search
+- **Soft delete** — documents are marked deleted rather than hard-removed, preserving the audit trail
+- **Dark mode** *(optional task — see below)*
+
+## Screenshot
+
+![Workspace](public/screenshot-workspace.png)
+
+## Running locally
+
+**Prerequisites:** Node.js 18 or later, npm.
 
 ```bash
+# 1. Clone the repo
+git clone https://github.com/Spanin196/document-management-app.git
+cd document-management-app
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Home page: `http://localhost:3000`
+- Workspace: `http://localhost:3000/docs`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+No environment variables are required to run the app locally.
 
-## Learn More
+## Optional task: Dark mode
 
-To learn more about Next.js, take a look at the following resources:
+Dark mode is implemented with a cookie-based server-side approach so the correct theme is applied on the very first byte — no flash of the wrong theme on load.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**How it works:**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. A `theme` cookie is written to the browser when the user toggles the sun/moon button.
+2. On every request, the Next.js root layout (a Server Component) reads the cookie via `cookies()` and conditionally adds the `dark` class to `<html>` before sending HTML to the client.
+3. Tailwind's `dark:` utilities are wired to `.dark` via a custom `@variant` directive, so all colour switches happen through CSS rather than JavaScript after hydration.
+4. A `@media (prefers-color-scheme: dark)` block in `globals.css` handles first-time visitors who have never set a preference — their OS setting is respected until they explicitly toggle.
 
-## Deploy on Vercel
+The toggle is available in the sidebar footer (desktop) and in the fixed header bar (mobile).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19, Tailwind CSS v4 |
+| Language | TypeScript |
+| Fonts | DM Serif Display, Plus Jakarta Sans (via `next/font/google`) |
+| Storage | Browser `localStorage` |
+| Markdown | `react-markdown` |
