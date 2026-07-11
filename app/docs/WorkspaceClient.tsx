@@ -4,37 +4,14 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+import { createClient } from "@/utils/supabase/client";
 
-type Doc = {
+type Note = {
   id: string;
-  slug: string;
   title: string;
   body: string;
-  updatedAt: number;
-  deletedAt?: number;
+  updated_at: string;
 };
-
-function uid() {
-  return Math.random().toString(36).slice(2);
-}
-
-function slugify(title: string): string {
-  return (
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "untitled"
-  );
-}
-
-function generateSlug(title: string, docs: Doc[], currentId: string): string {
-  const base = slugify(title);
-  const taken = new Set(docs.filter((d) => d.id !== currentId).map((d) => d.slug));
-  if (!taken.has(base)) return base;
-  let n = 2;
-  while (taken.has(`${base}-${n}`)) n++;
-  return `${base}-${n}`;
-}
 
 function SunIcon() {
   return (
@@ -60,73 +37,133 @@ function MoonIcon() {
   );
 }
 
+function DownloadIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v12" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
+
 export default function WorkspaceClient({ initialId }: { initialId?: string }) {
   const router = useRouter();
-  const [docs, setDocs] = useState<Doc[]>([]);
-  const activeId = initialId ?? null;
-  const [search, setSearch] = useState("");
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [preview, setPreview] = useState(false);
   const [dark, setDark] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [signOutError, setSignOutError] = useState(false);
+  const saveTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const activeId = initialId ?? null;
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
   }, []);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("docs");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) setDocs(parsed as Doc[]);
-      }
-    } catch {}
-    setLoaded(true);
+    const supabase = createClient();
+    supabase
+      .from("notes")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) { setLoadError(true); }
+        else if (data) setNotes(data as Note[]);
+        setLoaded(true);
+      });
   }, []);
 
   useEffect(() => {
-    if (!loaded) return;
-    localStorage.setItem("docs", JSON.stringify(docs));
-  }, [docs, loaded]);
+    return () => {
+      Object.values(saveTimeouts.current).forEach(clearTimeout);
+    };
+  }, []);
 
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
-  const activeDocs = docs.filter((d) => !d.deletedAt);
-  const activeDoc = activeDocs.find((d) => d.slug === activeId || d.id === activeId) ?? null;
-  const sorted = [...activeDocs].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
-  const filtered = sorted.filter((d) =>
-    d.title.toLowerCase().includes(search.toLowerCase())
+  const activeNote = notes.find((n) => n.id === activeId) ?? null;
+  const sorted = [...notes].sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  const filtered = sorted.filter((n) =>
+    n.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  function newDocument() {
-    if (!loaded) return;
-    const doc: Doc = { id: uid(), slug: "", title: "", body: "", updatedAt: Date.now() };
-    const next = [doc, ...docs];
-    try { localStorage.setItem("docs", JSON.stringify(next)); } catch {}
-    setDocs(next);
-    router.push(`/docs/${doc.id}`);
+  async function newDocument() {
+    const supabase = createClient();
+    const { data: claimsData } = await supabase.auth.getClaims();
+    if (!claimsData?.claims) return;
+    const claims = claimsData.claims;
+    const { data, error } = await supabase
+      .from("notes")
+      .insert({ title: "", body: "", user_id: claims.sub })
+      .select()
+      .single();
+    if (error || !data) return;
+    setNotes((prev) => [data as Note, ...prev]);
+    router.push(`/docs/${data.id}`);
   }
 
-  function deleteDocument(id: string) {
+  async function deleteDocument(id: string) {
     if (!window.confirm("Delete this document? This cannot be undone.")) return;
-    setDocs((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, deletedAt: Date.now() } : d))
-    );
-    if (activeDoc?.id === id) {
-      router.push("/docs");
-    }
+    const supabase = createClient();
+    const { error } = await supabase.from("notes").delete().eq("id", id);
+    if (error) return;
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    if (activeNote?.id === id) router.push("/docs");
   }
 
   function update(field: "title" | "body", value: string) {
-    const targetId = activeDoc?.id;
+    const targetId = activeNote?.id;
     if (!targetId) return;
-    setDocs((prev) =>
-      prev.map((d) =>
-        d.id === targetId ? { ...d, [field]: value, updatedAt: Date.now() } : d
+    const now = new Date().toISOString();
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === targetId ? { ...n, [field]: value, updated_at: now } : n
       )
     );
+    if (saveTimeouts.current[field]) clearTimeout(saveTimeouts.current[field]);
+    saveTimeouts.current[field] = setTimeout(async () => {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("notes")
+        .update({ [field]: value, updated_at: now })
+        .eq("id", targetId);
+      if (error) setSaveError(true);
+      else setSaveError(false);
+    }, 500);
+  }
+
+  function downloadMarkdown() {
+    if (!activeNote) return;
+    const filename =
+      activeNote.title
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "untitled";
+    const content = `# ${activeNote.title || "Untitled"}\n\n${activeNote.body}`;
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${filename}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  async function signOut() {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
+    if (error) { setSignOutError(true); return; }
+    router.push("/auth/sign-in");
   }
 
   useEffect(() => {
@@ -141,15 +178,6 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
       e.preventDefault();
       bodyRef.current?.focus();
     }
-  }
-
-  function onTitleBlur() {
-    if (!activeDoc || activeDoc.slug || !activeDoc.title.trim()) return;
-    const slug = generateSlug(activeDoc.title, docs, activeDoc.id);
-    const next = docs.map((d) => (d.id === activeDoc.id ? { ...d, slug } : d));
-    try { localStorage.setItem("docs", JSON.stringify(next)); } catch {}
-    setDocs(next);
-    router.replace(`/docs/${slug}`);
   }
 
   function toggleDark() {
@@ -186,7 +214,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           </svg>
         </button>
         <span className="flex-1 truncate text-sm font-medium text-ink-muted">
-          {activeDoc?.title || "Documents"}
+          {activeNote?.title || "Documents"}
         </span>
         {darkToggleButton}
       </div>
@@ -214,7 +242,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           className="w-full rounded-xl border border-black/8 bg-black/3 px-3 py-2 text-xs outline-none placeholder-ink-muted dark:border-white/8 dark:bg-white/5"
         />
 
-        {/* New document — primary teal action */}
+        {/* New document */}
         <button
           onClick={newDocument}
           className="w-full rounded-xl bg-brand px-4 py-2.5 text-left text-sm font-semibold text-white shadow-sm hover:bg-brand/90 active:bg-brand/80 transition-colors"
@@ -224,7 +252,14 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
 
         {/* Document list */}
         <div className="flex-1 overflow-y-auto" aria-live="polite">
-          {loaded && activeDocs.length === 0 ? (
+          {loadError ? (
+            <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
+              <p className="text-sm font-semibold text-ink">Unable to load notes</p>
+              <p className="text-xs leading-relaxed text-ink-muted">
+                Check your connection and reload the page.
+              </p>
+            </div>
+          ) : loaded && notes.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
               <p className="text-sm font-semibold text-ink">No Documents Yet</p>
               <p className="text-xs leading-relaxed text-ink-muted">
@@ -252,28 +287,28 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
             </div>
           ) : (
             <ul className="flex flex-col gap-0.5">
-              {filtered.map((doc) => (
+              {filtered.map((note) => (
                 <li
-                  key={doc.id}
+                  key={note.id}
                   className={`group flex items-center rounded-xl transition-colors ${
-                    doc.id === activeDoc?.id
+                    note.id === activeNote?.id
                       ? "bg-brand/10"
                       : "hover:bg-black/4 dark:hover:bg-white/6"
                   }`}
                 >
                   <Link
-                    href={`/docs/${doc.slug || doc.id}`}
+                    href={`/docs/${note.id}`}
                     onClick={() => setSidebarOpen(false)}
                     className={`min-w-0 flex-1 truncate px-3 py-2 text-sm transition-colors ${
-                      doc.id === activeDoc?.id
+                      note.id === activeNote?.id
                         ? "font-medium text-brand"
                         : "text-ink/75 dark:text-ink/80"
                     }`}
                   >
-                    {doc.title || "Untitled"}
+                    {note.title || "Untitled"}
                   </Link>
                   <button
-                    onClick={() => deleteDocument(doc.id)}
+                    onClick={() => deleteDocument(note.id)}
                     className="mr-2 flex shrink-0 rounded-lg p-1 text-ink-muted/40 hover:bg-black/8 hover:text-ink dark:hover:bg-white/10 transition-colors md:hidden md:group-hover:flex"
                     aria-label="Delete document"
                   >
@@ -285,7 +320,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           )}
         </div>
 
-        {/* Footer: home button + dark mode toggle */}
+        {/* Footer */}
         <div className="flex flex-col gap-2 border-t border-black/5 pt-3 dark:border-white/5">
           <Link
             href="/"
@@ -293,6 +328,15 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
           >
             ← Home
           </Link>
+          <button
+            onClick={signOut}
+            className="w-full rounded-xl border border-black/8 px-4 py-2 text-left text-sm text-ink-muted hover:bg-black/4 dark:border-white/8 dark:hover:bg-white/6 transition-colors"
+          >
+            Sign out
+          </button>
+          {signOutError && (
+            <p className="text-xs text-red-500">Sign-out failed. Try again.</p>
+          )}
           <div className="flex justify-end">
             {darkToggleButton}
           </div>
@@ -302,7 +346,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
       {/* Editor */}
       <main className="flex flex-1 flex-col overflow-hidden px-6 py-8 md:px-16 md:py-12">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
-          {activeDoc ? (
+          {activeNote ? (
             <>
               {/* Title row */}
               <div className="flex items-center justify-between border-b border-black/6 pb-4 dark:border-white/6">
@@ -310,14 +354,15 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                   ref={titleRef}
                   type="text"
                   placeholder="Untitled"
-                  value={activeDoc.title}
+                  value={activeNote.title}
                   onChange={(e) => update("title", e.target.value)}
                   onKeyDown={onTitleKeyDown}
-                  onBlur={onTitleBlur}
                   className="min-w-0 flex-1 bg-transparent font-display text-3xl outline-none placeholder-ink-muted/40"
                 />
                 <div className="ml-4 flex shrink-0 items-center gap-2">
-                  {/* Edit / Preview pill */}
+                  {saveError && (
+                    <span className="text-xs text-red-500">Unsaved changes</span>
+                  )}
                   <div className="flex rounded-full border border-black/8 bg-black/3 p-0.5 text-xs dark:border-white/8 dark:bg-white/5">
                     <button
                       onClick={() => setPreview(false)}
@@ -340,6 +385,14 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                       Preview
                     </button>
                   </div>
+                  <button
+                    onClick={downloadMarkdown}
+                    aria-label="Download as Markdown"
+                    title="Download as Markdown"
+                    className="rounded-lg p-1.5 text-ink-muted hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  >
+                    <DownloadIcon />
+                  </button>
                   {darkToggleButton}
                 </div>
               </div>
@@ -347,7 +400,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
               {/* Body */}
               {preview ? (
                 <div className="mt-6 flex-1 overflow-y-auto text-base leading-loose">
-                  {activeDoc.body.trim() ? (
+                  {activeNote.body.trim() ? (
                     <ReactMarkdown
                       components={{
                         h1: ({ children }) => <h1 className="font-display mt-6 mb-3 text-2xl text-ink">{children}</h1>,
@@ -361,7 +414,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                         em: ({ children }) => <em className="italic">{children}</em>,
                       }}
                     >
-                      {activeDoc.body}
+                      {activeNote.body}
                     </ReactMarkdown>
                   ) : (
                     <p className="text-ink-muted">Nothing to preview yet.</p>
@@ -371,7 +424,7 @@ export default function WorkspaceClient({ initialId }: { initialId?: string }) {
                 <textarea
                   ref={bodyRef}
                   placeholder="Start writing…"
-                  value={activeDoc.body}
+                  value={activeNote.body}
                   onChange={(e) => update("body", e.target.value)}
                   className="mt-6 flex-1 resize-none bg-transparent text-base leading-loose outline-none placeholder-ink-muted/40"
                 />

@@ -1,12 +1,12 @@
 @AGENTS.md
 
-# Document Management App
+# Notes Workspace App
 
-A centralised document management system built with Next.js (App Router), React, and Node.js. The app lets organisations store, organise, search, and collaborate on documents securely, with access available remotely from any device.
+A single-workspace notes app built with Next.js (App Router), React, and Supabase. Users sign in with email and password; each user sees only their own notes. The app runs locally — deployment to a live URL is a future sprint.
 
 ## Purpose
 
-Replace scattered file storage (email attachments, local drives, ad-hoc cloud folders) with a single system that enforces access control, keeps a full audit trail, and enables teams to work on documents together in real time.
+Give individual users a private, persistent space to create, edit, and delete notes. Notes are stored in Supabase (not localStorage) and are scoped to the signed-in user so no account can access another's data.
 
 ## Tech Stack
 
@@ -16,55 +16,25 @@ Replace scattered file storage (email attachments, local drives, ad-hoc cloud fo
 | UI | React 19, Tailwind CSS v4 |
 | Language | TypeScript |
 | Backend | Node.js via Next.js Route Handlers (`app/api/`) |
-| Auth | To be decided — ask before adding a library |
-| Database | To be decided — ask before adding a library |
+| Auth | Supabase Auth via `@supabase/ssr` |
+| Database | Supabase (PostgreSQL) |
 | File storage | To be decided — ask before adding a library |
-
-## Key Features
-
-### Smart Search with OCR
-- Full-text search across document contents, not just filenames
-- OCR extracts text from scanned PDFs and images so they are searchable
-- Filters by date, owner, type, tag, and folder
-
-### Strict Access Control
-- Role-based permissions: Admin, Editor, Viewer, Guest
-- Per-document and per-folder permission overrides
-- All access events are logged to an immutable audit trail
-- Documents can be shared via expiring, token-protected links
-
-### Workflow Automation
-- Configurable approval workflows (e.g. draft → review → approved)
-- Automated notifications when a document changes state
-- Rules engine for auto-tagging, auto-routing, and retention policies
-
-### Real-Time Collaboration with Version Control
-- Multiple users can view and comment on a document simultaneously
-- Every save creates a numbered version; any version can be restored
-- Diff view between versions
-- Conflict detection when two users edit the same document
 
 ## Project Structure
 
 ```
 app/                   Pages and API routes (all new pages go here)
 app/api/               Backend route handlers
-app/dashboard/         Main authenticated area
-app/documents/         Document browsing, viewing, and editing
-app/search/            Search interface
-app/settings/          User and workspace settings
-app/auth/              Login, registration, password reset
+app/auth/              Sign-in page (and optional sign-up page)
+app/docs/              Notes workspace (protected — requires sign-in)
+app/docs/[id]/         Per-note editor route
 public/                Static assets
 ```
 
 ## Data Model (high-level)
 
-- **User** — profile, role, team memberships
-- **Document** — metadata, current version pointer, permissions
-- **Version** — file content, author, timestamp, change summary
-- **Folder** — hierarchical container, inherits and overrides permissions
-- **AuditLog** — immutable record of every action (view, edit, share, delete)
-- **Workflow** — state machine definition attached to a document or folder
+- **User** — managed by Supabase Auth; identified by `auth.uid()`
+- **Note** — `id`, `user_id` (FK → auth.users), `title`, `body`, `created_at`, `updated_at`
 
 ## Running the App
 
@@ -82,31 +52,57 @@ The app runs at http://localhost:3000.
 
 3. **Never commit secrets or credentials.** Environment variables go in `.env.local` (already gitignored). Reference them via `process.env` and document required variables in `.env.example`.
 
-4. **Access control is non-negotiable.** Every API route must verify the caller's session and permissions before returning data or mutating state. There are no public data endpoints.
+4. **Use `@supabase/ssr` for all Supabase auth integration.** Do not use `@supabase/auth-helpers-nextjs` or any other auth helper package.
 
-5. **Preserve the audit trail.** Documents and versions are never hard-deleted by default — use soft deletes with a `deletedAt` timestamp. Audit log rows are append-only.
+5. **Always use `getUser()` in server code — never `getSession()`.** `getSession()` reads from the cookie without re-validating the JWT with Supabase's server; `getUser()` makes a network call that guarantees the token is still valid. Any diff that introduces `getSession()` in a server file must be flagged before merging.
+
+6. **All workspace routes (`/docs` and below) must redirect unauthenticated visitors to `/auth/sign-in`.** Implement this check server-side. Do not rely on client-side guards alone.
+
+7. **No note data may live in `localStorage` or `sessionStorage` — ever.** All persistence goes through Supabase. This replaces the previous localStorage approach.
+
+8. **No custom password handling.** Let Supabase Auth own the full credential lifecycle. Do not hash, store, or transmit passwords yourself.
+
+9. **Never expose the Supabase service-role key to the client.** It must only appear in server-side env vars (prefixed without `NEXT_PUBLIC_`). Only the anon key goes in `NEXT_PUBLIC_` variables.
+
+10. **Test accounts are created by hand in the Supabase dashboard's Authentication tab.** A self-service sign-up page is an optional task, not a core requirement.
 
 ## Context — Feature Backlog
 
-All planned features are implemented. See "Already implemented" below.
+### Already implemented (localStorage era — to be migrated/superseded by Supabase tasks below)
 
-Already implemented:
-- **Dark mode** — sun/moon toggle in the editor header and mobile header bar; theme persisted via cookie so the server renders `<html class="dark">` from the first byte with no flash; `@variant dark` in Tailwind v4 wires all `dark:` utilities to the `.dark` class (Task 13) ✓
-- **Markdown support** — body field renders headings, bold, italic, bullet lists in preview mode; Edit/Preview toggle in the editor header; `react-markdown@10` (Task 10) ✓
-- **Responsive layout** — collapsible sidebar overlay on mobile/tablet (< md); hamburger toggle in a fixed header bar; side-by-side panes on desktop (Task 12) ✓
-- **Sidebar sorted by recently updated** — `updatedAt: number` on `Doc`; stamped on new doc + every title/body edit; sidebar sorted descending before filtering (Task 3) ✓
-- **Empty states** — "No Documents Yet" with New Document CTA; "No Documents Match Your Search" with Clear Search CTA in the sidebar (Task 9) ✓
-- **Home page at `/`** — short description and a link to the workspace (Task 1) ✓
-- **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing (Task 8) ✓
-- **Workspace at `/docs`** — two-pane layout at `/docs`; home page at `/` (Task 2) ✓
-- **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave (Tasks 5, 6-partial) ✓
-- **Direct navigation to `/docs/[id]`** — loading the URL directly opens the correct document from localStorage (Task 6-partial) ✓
-- **Document not found page** — navigating to a non-existent document ID shows a clear message and a link back to `/docs` (Task 7) ✓
-- **New document button** — creates a blank doc and opens it immediately (Task 4) ✓
-- **Persistence across reload** — documents survive a full page reload via localStorage (Task 6-partial) ✓
-- **Enter key jumps to body** — pressing Enter in the title field moves the cursor to the body; no mouse needed (Task 11) ✓
-- **Title search** — sidebar filters documents by title as the user types (Task 3-partial) ✓
+- **Dark mode** — sun/moon toggle in the editor header and mobile header bar; theme persisted via cookie so the server renders `<html class="dark">` from the first byte with no flash; `@variant dark` in Tailwind v4 wires all `dark:` utilities to the `.dark` class ✓
+- **Markdown support** — body field renders headings, bold, italic, bullet lists in preview mode; Edit/Preview toggle in the editor header; `react-markdown@10` ✓
+- **Responsive layout** — collapsible sidebar overlay on mobile/tablet (< md); hamburger toggle in a fixed header bar; side-by-side panes on desktop ✓
+- **Sidebar sorted by recently updated** — `updatedAt` stamped on new doc + every title/body edit; sidebar sorted descending before filtering ✓
+- **Empty states** — "No Documents Yet" with New Document CTA; "No Documents Match Your Search" with Clear Search CTA in the sidebar ✓
+- **Home page at `/`** — short description and a link to the workspace ✓
+- **Delete control** — per-document delete button in the sidebar; asks for confirmation before removing ✓
+- **Workspace at `/docs`** — two-pane layout; home page at `/` ✓
+- **Per-document route `/docs/[id]`** — each document gets its own URL; title + body editor lives at that route; changes autosave ✓
+- **Direct navigation to `/docs/[id]`** — loading the URL directly opens the correct document ✓
+- **Document not found page** — navigating to a non-existent document ID shows a clear message and a link back to `/docs` ✓
+- **New document button** — creates a blank doc and opens it immediately ✓
+- **Enter key jumps to body** — pressing Enter in the title field moves the cursor to the body ✓
+- **Title search** — sidebar filters documents by title as the user types ✓
 
-## Next To Do
+### Supabase auth + persistence sprint — complete
 
-All backlog items are complete.
+- **Email/password auth via Supabase** — sign-in page at `/auth/sign-in`; sign-out button or link accessible once signed in; accounts created manually in the Supabase dashboard's Authentication tab; no self-service sign-up required for core ✓
+
+- **Protected routes** — any route under `/docs` redirects unauthenticated visitors to `/auth/sign-in`; check implemented server-side with `getClaims()` (equivalent to `getUser()` — validates the JWT server-side rather than trusting the cookie) ✓
+
+- **Notes persisted in Supabase, scoped to the signed-in user** — chosen approach recorded in `REFLECTION.md` (direct queries via `@supabase/ssr` + RLS, not a proxy API layer); each note row carries a `user_id` tied to `auth.uid()`; RLS enforces per-user isolation; localStorage/sessionStorage removed ✓
+
+- **Full CRUD persists across reloads** — create, edit, and delete all round-trip through Supabase ✓
+
+- **Local verification checklist** — confirmed by user ✓
+  - Create a test account, sign in, and land on the workspace ✓
+  - Create a note, reload the page — the note is still there ✓
+  - Sign out — the workspace is inaccessible; navigating to it directly redirects to sign-in ✓
+  - Create a second test account, sign in as that account, confirm it sees none of the first account's notes ✓ (user-confirmed: "users see only their notes")
+
+### Optional tasks
+
+- **Export to Markdown** — button (download icon) on each note's title row downloads the note content as a `.md` file; matches design-brief icon styling; no new dependency (`Blob` + `URL.createObjectURL`) ✓
+
+- **Self-service sign-up** — a `/auth/sign-up` page so users can register without needing a manual account in the Supabase dashboard; uses Supabase's default `signUp()` flow; cross-linked with `/auth/sign-in` ✓
