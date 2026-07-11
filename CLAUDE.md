@@ -2,7 +2,7 @@
 
 # Notes Workspace App
 
-A single-workspace notes app built with Next.js (App Router), React, and Supabase. Users sign in with email and password; each user sees only their own notes. The app runs locally — deployment to a live URL is a future sprint.
+A single-workspace notes app built with Next.js (App Router), React, and Supabase. Users sign in with email and password; each user sees only their own notes. The app is deployed on Vercel at https://document-management-4hu81hju9-bready.vercel.app/ and runs locally via `npm run dev`.
 
 ## Purpose
 
@@ -42,7 +42,7 @@ public/                Static assets
 npm run dev
 ```
 
-The app runs at http://localhost:3000.
+The app runs locally at http://localhost:3000 and is deployed on Vercel at https://document-management-4hu81hju9-bready.vercel.app/.
 
 ## Rules
 
