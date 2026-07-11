@@ -9,7 +9,7 @@ export default function Home() {
         </h1>
         <p className="mt-5 text-base leading-relaxed text-ink-muted">
           A calm place to write, search, and organise your documents.
-          Everything lives in your browser — no account required.
+          Sign in to access your private, cloud-synced workspace.
         </p>
         <p className="mt-10 font-display text-4xl italic leading-snug text-lavender">
           Just Be Here Now
