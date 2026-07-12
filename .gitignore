@@ -6,3 +6,5 @@ node_modules
 out/
 tsconfig.tsbuildinfo
 document-management-app.git/
+.vercel
+.env*
