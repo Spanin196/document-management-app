@@ -66,6 +66,9 @@ The app runs locally at http://localhost:3000 and is deployed on Vercel at https
 
 10. **Test accounts are created by hand in the Supabase dashboard's Authentication tab.** A self-service sign-up page is an optional task, not a core requirement.
 
+11. **MCP vs. Skills usage:** Use the CLI for one-off tasks. Use MCP when the agent needs to repeat or
+react to what's on screen.
+
 ## Context — Feature Backlog
 
 ### Already implemented (localStorage era — to be migrated/superseded by Supabase tasks below)
